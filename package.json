@@ -1,0 +1,17 @@
+{
+  "name": "sql-defect-investigation",
+  "version": "1.0.0",
+  "description": "Investigação de defeitos de dados num schema de CRM/ERP, usando SQL documentado contra um PostgreSQL real.",
+  "main": "index.js",
+  "scripts": {
+    "validate": "node scripts/validate.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "embedded-postgres": "^18.4.0-beta.17",
+    "pg": "^8.23.1"
+  }
+}
