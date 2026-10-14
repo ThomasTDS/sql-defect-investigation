@@ -20,6 +20,11 @@ Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de u
 sql-defect-investigation/
 ├── .github/workflows/
 │   └── ci.yml                 # CI: validação com Postgres embarcado + Docker Compose
+├── investigacoes/
+│   └── 01-clientes-duplicados/
+│       ├── README.md          # relatório: sintoma → hipóteses → evidência → causa raiz → correção
+│       ├── exploracao.sql     # queries na ordem em que foram usadas
+│       └── deteccao.sql       # query final de detecção (executada pela CI)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
 │   ├── 02_seed_valido.sql     # massa de dados limpa (controle)
@@ -70,14 +75,14 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 
 ## Os 4 defeitos investigados
 
-| # | Defeito | Cenário real simulado |
-|---|---------|------------------------|
-| 1 | Clientes duplicados | Formulário de cadastro enviado duas vezes, sem constraint única em email/documento |
-| 2 | Foreign key órfã | Cliente removido diretamente no banco (acesso de suporte), sem tratar os pedidos vinculados |
-| 3 | Status inconsistente | Pedido marcado "entregue" sem pagamento aprovado; pedido "cancelado" com pagamento ainda "aprovado" |
-| 4 | Data inválida | Importação em lote gravou a data de processamento, não a data real do pagamento |
+| # | Defeito | Cenário real simulado | Investigação |
+|---|---------|------------------------|--------------|
+| 1 | Clientes duplicados | Formulário de cadastro enviado duas vezes, sem constraint única em email/documento | [Relatório](investigacoes/01-clientes-duplicados/README.md) |
+| 2 | Foreign key órfã | Cliente removido diretamente no banco (acesso de suporte), sem tratar os pedidos vinculados | Em andamento |
+| 3 | Status inconsistente | Pedido marcado "entregue" sem pagamento aprovado; pedido "cancelado" com pagamento ainda "aprovado" | Em andamento |
+| 4 | Data inválida | Importação em lote gravou a data de processamento, não a data real do pagamento | Em andamento |
 
-Cada um está implementado e comentado em `sql/03_seed_quebrado.sql`, com a query de detecção correspondente em `scripts/validate.js`.
+Cada defeito está implementado e comentado em `sql/03_seed_quebrado.sql`. Cada investigação fica em `investigacoes/`, com um relatório completo e a query de detecção (`deteccao.sql`), que a CI executa contra as duas massas de dados. Assim, o que está documentado é exatamente o que é testado.
 
 ---
 
