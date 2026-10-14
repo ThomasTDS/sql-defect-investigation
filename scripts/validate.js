@@ -28,9 +28,9 @@ function readDeteccao(investigacao) {
 }
 
 // Cada check é uma query de detecção que devolve uma linha por registro
-// com defeito, e quantas linhas ela deve devolver em cada etapa. Quando a
-// investigação do defeito já existe, a query vem do deteccao.sql dela —
-// assim o que está documentado é exatamente o que é testado.
+// com defeito, e quantas linhas ela deve devolver em cada etapa. A query
+// vem do deteccao.sql da investigação correspondente — assim o que está
+// documentado é exatamente o que é testado.
 const CHECKS = [
   {
     label: 'pares de clientes duplicados (mesmo email ou documento)',
@@ -54,10 +54,8 @@ const CHECKS = [
     esperadoQuebrado: 3,
   },
   {
-    label: 'pagamentos com data anterior ao pedido',
-    sql: `SELECT pg.id FROM pagamentos pg
-          JOIN pedidos p ON p.id = pg.pedido_id
-          WHERE pg.data_pagamento IS NOT NULL AND pg.data_pagamento < p.data_pedido`,
+    label: 'datas implausíveis (fora da ordem cadastro → pedido → pagamento, ou no futuro)',
+    sql: readDeteccao('04-data-invalida'),
     esperadoValido: 0,
     esperadoQuebrado: 1,
   },
