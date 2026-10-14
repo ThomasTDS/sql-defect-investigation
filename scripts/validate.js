@@ -112,7 +112,10 @@ async function resetDatabase(client) {
   await client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
 }
 
-async function runChecks(client, campoEsperado) {
+// Resultado de cada check executado, usado no resumo da CI.
+const resultados = [];
+
+async function runChecks(client, etapa, campoEsperado) {
   for (const check of CHECKS) {
     const expected = check[campoEsperado];
     if (expected === null) continue;
@@ -125,8 +128,30 @@ async function runChecks(client, campoEsperado) {
     const count = Number(result.rows[0].count);
     const ok = count === expected;
     console.log(`  ${ok ? '✔' : '✘'} ${check.label}: esperado ${expected}, encontrado ${count}`);
+    resultados.push({ etapa, label: check.label, expected, count, ok });
     if (!ok) process.exitCode = 1;
   }
+}
+
+// No GitHub Actions, GITHUB_STEP_SUMMARY aponta para um arquivo cujo
+// conteúdo (Markdown) aparece na página da execução. Fora do Actions a
+// variável não existe e nada é escrito.
+function escreverResumoCi() {
+  const arquivo = process.env.GITHUB_STEP_SUMMARY;
+  if (!arquivo) return;
+
+  const okCount = resultados.filter((r) => r.ok).length;
+  const linhas = [
+    '## Validação dos dados',
+    '',
+    `**${okCount}/${resultados.length} checks OK**${okCount === resultados.length ? '' : ' — ver os itens marcados com ❌'}`,
+    '',
+    '| Etapa | Check | Esperado | Encontrado | |',
+    '|---|---|---|---|---|',
+    ...resultados.map((r) => `| ${r.etapa} | ${r.label} | ${r.expected} | ${r.count} | ${r.ok ? '✅' : '❌'} |`),
+    '',
+  ];
+  fs.appendFileSync(arquivo, linhas.join('\n') + '\n');
 }
 
 async function main() {
@@ -149,20 +174,22 @@ async function main() {
     await resetDatabase(client);
     await client.query(readSql('01_schema.sql'));
     await client.query(readSql('02_seed_valido.sql'));
-    await runChecks(client, 'esperadoValido');
+    await runChecks(client, 'Massa válida', 'esperadoValido');
 
     console.log('\n--- Etapa 2: schema + massa válida + massa QUEBRADA (defeitos esperados) ---');
     await resetDatabase(client);
     await client.query(readSql('01_schema.sql'));
     await client.query(readSql('02_seed_valido.sql'));
     await client.query(readSql('03_seed_quebrado.sql'));
-    await runChecks(client, 'esperadoQuebrado');
+    await runChecks(client, 'Massa quebrada', 'esperadoQuebrado');
 
     await client.end();
   } finally {
     await pg.stop();
     fs.rmSync(DATA_DIR, { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
   }
+
+  escreverResumoCi();
 
   if (process.exitCode === 1) {
     console.log('\nValidação FALHOU — ver itens marcados com ✘ acima.');

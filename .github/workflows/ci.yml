@@ -48,6 +48,20 @@ jobs:
           orfaos=$(query "SELECT COUNT(*) FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL")
           echo "clientes: $clientes (esperado 11)"
           echo "pedidos órfãos: $orfaos (esperado 1)"
+
+          marca() { [ "$1" = "$2" ] && echo "✅" || echo "❌"; }
+          {
+            echo "## Docker Compose"
+            echo ""
+            echo "| Conferência | Esperado | Encontrado | |"
+            echo "|---|---|---|---|"
+            echo "| clientes carregados | 11 | $clientes | $(marca "$clientes" 11) |"
+            echo "| pedidos órfãos (massa quebrada) | 1 | $orfaos | $(marca "$orfaos" 1) |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Tem que ser a última linha: com bash -e, uma lista com && que
+          # falha só derruba o passo quando é o último comando.
           [ "$clientes" = "11" ] && [ "$orfaos" = "1" ]
 
       # Roda cada exploracao.sql do jeito que o "Como reproduzir" dos
@@ -55,10 +69,16 @@ jobs:
       # primeira query que falhar, e o job falha junto.
       - name: Executar as explorações das investigações
         run: |
+          echo "**Explorações das investigações** (executadas com \`ON_ERROR_STOP\`):" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           for arquivo in investigacoes/*/exploracao.sql; do
             echo "::group::$arquivo"
-            docker compose exec -T postgres psql -U postgres -d defect_investigation -v ON_ERROR_STOP=1 < "$arquivo"
+            if ! docker compose exec -T postgres psql -U postgres -d defect_investigation -v ON_ERROR_STOP=1 < "$arquivo"; then
+              echo "- ❌ \`$arquivo\`" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
             echo "::endgroup::"
+            echo "- ✅ \`$arquivo\`" >> "$GITHUB_STEP_SUMMARY"
           done
 
       - name: Logs do container em caso de falha
