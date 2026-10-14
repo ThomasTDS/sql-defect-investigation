@@ -150,6 +150,8 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 - **Validação (Postgres embarcado):** executa `npm run validate`, os mesmos checks da Opção 2.
 - **Docker Compose:** sobe o banco com `docker compose up --wait`, confere que o schema e as duas massas de dados foram carregados e executa o `exploracao.sql` de cada investigação. Isso garante que a Opção 1 funciona e que toda query mostrada nos relatórios roda sem erro.
 
+O resultado de cada conferência aparece numa tabela no resumo da execução, na aba **Actions** do GitHub, sem precisar abrir os logs.
+
 ---
 
 ## Os 5 defeitos investigados
