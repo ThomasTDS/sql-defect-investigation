@@ -162,7 +162,13 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Sai explicitamente com o código certo: o embedded-postgres registra um
+// gancho de saída (async-exit-hook) que, se o processo terminar sozinho,
+// chama process.exit(0) e descarta o process.exitCode = 1 dos checks que
+// falharam — e a CI ficaria verde mesmo com defeito.
+main()
+  .then(() => process.exit(process.exitCode || 0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
