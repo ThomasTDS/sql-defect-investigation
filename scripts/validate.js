@@ -66,6 +66,12 @@ const CHECKS = [
     esperadoQuebrado: 1,
   },
   {
+    label: 'pagamentos aprovados registrados em duplicidade',
+    sql: readDeteccao('05-pagamento-duplicado'),
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
     // 1 na massa quebrada: o pedido 10 tem valor_total e nenhum item.
     label: 'pedidos com total diferente da soma dos itens',
     sql: readValidacao('total-pedido-igual-soma-itens.sql'),
@@ -73,10 +79,12 @@ const CHECKS = [
     esperadoQuebrado: 1,
   },
   {
+    // 1 na massa quebrada: o pedido 2, com o pagamento em duplicidade da
+    // investigação 05 (soma 199,80 para um total de 99,90).
     label: 'pedidos com pagamentos aprovados diferentes do total',
     sql: readValidacao('pagamento-igual-total-pedido.sql'),
     esperadoValido: 0,
-    esperadoQuebrado: 0,
+    esperadoQuebrado: 1,
   },
   {
     // Premissa da massa de controle, não regra de negócio: ver o

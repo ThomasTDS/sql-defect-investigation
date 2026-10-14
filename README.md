@@ -6,7 +6,7 @@
 
 ## Descrição
 
-Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de dados reais — clientes duplicados, foreign keys órfãs, status inconsistentes e datas inválidas — e documenta as investigações SQL que encontram cada um deles, com a mesma metodologia usada em investigação de bugs de produção: sintoma → hipóteses → queries e evidências → causa raiz → impacto → correção proposta.
+Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de dados reais — clientes duplicados, foreign keys órfãs, status inconsistentes, datas inválidas e pagamentos em duplicidade — e documenta as investigações SQL que encontram cada um deles, com a mesma metodologia usada em investigação de bugs de produção: sintoma → hipóteses → queries e evidências → causa raiz → impacto → correção proposta.
 
 Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de usar SQL para **encontrar defeito real** num banco com dados já corrompidos, do jeito que aconteceria investigando um bug relatado em produção.
 
@@ -68,7 +68,7 @@ erDiagram
     }
 
     pagamentos {
-        int id PK
+        int id PK "único identificador: sem id da transação do gateway (inv. 05)"
         int pedido_id FK
         numeric valor
         timestamp data_pagamento "opcional, sem validação (inv. 04)"
@@ -76,7 +76,7 @@ erDiagram
     }
 ```
 
-As anotações **inv. 01** a **inv. 04** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-4-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
+As anotações **inv. 01** a **inv. 05** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-5-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
 
 ---
 
@@ -93,7 +93,8 @@ sql-defect-investigation/
 │   │   └── deteccao.sql       # query final de detecção (executada pela CI)
 │   ├── 02-fk-orfa/            # mesma estrutura
 │   ├── 03-status-inconsistente/   # mesma estrutura
-│   └── 04-data-invalida/          # mesma estrutura
+│   ├── 04-data-invalida/          # mesma estrutura
+│   └── 05-pagamento-duplicado/    # mesma estrutura
 ├── validacoes/                # regras de consistência de valores (total, pagamento, catálogo)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
@@ -151,7 +152,7 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 
 ---
 
-## Os 4 defeitos investigados
+## Os 5 defeitos investigados
 
 | # | Defeito | Cenário real simulado | Investigação |
 |---|---------|------------------------|--------------|
@@ -159,6 +160,7 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 | 2 | Foreign key órfã | Cliente removido diretamente no banco (acesso de suporte), sem tratar os pedidos vinculados | [Relatório](investigacoes/02-fk-orfa/README.md) |
 | 3 | Status inconsistente | Pedido marcado "entregue" sem pagamento aprovado; pedido "cancelado" com pagamento ainda "aprovado" | [Relatório](investigacoes/03-status-inconsistente/README.md) |
 | 4 | Data inválida | Pagamento lançado à mão na conciliação com a data digitada errada, anterior ao próprio pedido | [Relatório](investigacoes/04-data-invalida/README.md) |
+| 5 | Pagamento em duplicidade | O gateway reenviou a confirmação do pagamento (webhook) e a aplicação registrou as duas, sem chave de idempotência | [Relatório](investigacoes/05-pagamento-duplicado/README.md) |
 
 ### Principais achados
 
@@ -168,6 +170,7 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 | 2 | O pedido 10 (R$ 99,90) aponta para um cliente removido e some de todo relatório que faz `JOIN` com `clientes` | O cliente foi apagado num período sem a foreign key, que depois foi recriada como `NOT VALID` e nunca validada |
 | 3 | Um pedido cancelado com o pagamento ainda aprovado (sem estorno), um pedido entregue sem pagamento confirmado e o pedido 10 confirmado sem pagamento | Os status de pedido e de pagamento mudam de forma independente, e o banco não tem nenhuma regra sobre eles |
 | 4 | Um pagamento datado 48h antes do próprio pedido, com o mesmo horário dele, o que distorce o indicador de tempo até aprovação | Lançamento manual com a data digitada errada, sem validação de data nem registro da origem |
+| 5 | O pedido 2 tem dois pagamentos aprovados idênticos, com 4 segundos de diferença: o sistema registra R$ 199,80 recebidos para uma única transação de R$ 99,90 no gateway | A tabela `pagamentos` não guarda o id da transação do gateway, então um webhook reenviado vira um pagamento novo |
 
 Cada relatório termina com uma correção proposta, testada numa cópia descartável do banco, mas **não executada**: como numa investigação real, o QA entrega evidência e recomendação, e a decisão de mexer nos dados é do time responsável.
 
@@ -185,7 +188,7 @@ Basta trocar a pasta para rodar as outras investigações.
 
 Cada defeito está implementado e comentado em `sql/03_seed_quebrado.sql`. Cada investigação fica em `investigacoes/`, com um relatório completo e a query de detecção (`deteccao.sql`), que a CI executa contra as duas massas de dados. Assim, o que está documentado é exatamente o que é testado.
 
-Além dos 4 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
+Além dos 5 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
 
 ---
 

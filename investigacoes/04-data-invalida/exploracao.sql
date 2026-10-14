@@ -14,7 +14,8 @@ JOIN pedidos p ON p.id = pg.pedido_id
 WHERE pg.status = 'aprovado';
 
 -- Passo 2: todos os pagamentos aprovados, com o tempo até a aprovação.
--- Ordena do menor para o maior, para o valor negativo aparecer primeiro.
+-- Ordena do menor para o maior, para o valor negativo aparecer primeiro
+-- (o id desempata tempos iguais, para o resultado ser sempre o mesmo).
 SELECT
     pg.id AS pagamento_id,
     p.id AS pedido_id,
@@ -24,7 +25,7 @@ SELECT
 FROM pagamentos pg
 JOIN pedidos p ON p.id = pg.pedido_id
 WHERE pg.status = 'aprovado'
-ORDER BY tempo_ate_aprovacao;
+ORDER BY tempo_ate_aprovacao, pg.id;
 
 -- Passo 3: detalhe do pagamento suspeito e do pedido dele.
 SELECT
