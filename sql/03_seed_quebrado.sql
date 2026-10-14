@@ -59,10 +59,10 @@ VALUES (currval('pedidos_id_seq'), 79.90, '2026-02-01 14:05:00', 'aprovado');
 
 -- =====================================================================
 -- DEFEITO 4: Data inválida
--- Cenário real: importação em lote de pagamentos atrasados (conciliação
--- manual com o gateway) gravou a data em que o registro foi processado,
--- não a data em que o pagamento de fato ocorreu, resultando num
--- pagamento "datado" antes do próprio pedido existir.
+-- Cenário real: na conciliação manual com o gateway, um operador lançou
+-- o pagamento à mão e digitou a data errada (copiou o horário do pedido
+-- e errou o dia), resultando num pagamento "datado" antes do próprio
+-- pedido existir. Nada no banco valida a data informada.
 -- =====================================================================
 INSERT INTO pedidos (cliente_id, vendedor_id, data_pedido, status, valor_total)
 VALUES (8, 4, '2026-02-10 10:00:00', 'confirmado', 150.00);
