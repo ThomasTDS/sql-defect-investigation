@@ -21,10 +21,11 @@ sql-defect-investigation/
 ├── .github/workflows/
 │   └── ci.yml                 # CI: validação com Postgres embarcado + Docker Compose
 ├── investigacoes/
-│   └── 01-clientes-duplicados/
-│       ├── README.md          # relatório: sintoma → hipóteses → evidência → causa raiz → correção
-│       ├── exploracao.sql     # queries na ordem em que foram usadas
-│       └── deteccao.sql       # query final de detecção (executada pela CI)
+│   ├── 01-clientes-duplicados/
+│   │   ├── README.md          # relatório: sintoma → hipóteses → evidência → causa raiz → correção
+│   │   ├── exploracao.sql     # queries na ordem em que foram usadas
+│   │   └── deteccao.sql       # query final de detecção (executada pela CI)
+│   └── 02-fk-orfa/            # mesma estrutura
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
 │   ├── 02_seed_valido.sql     # massa de dados limpa (controle)
@@ -78,7 +79,7 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 | # | Defeito | Cenário real simulado | Investigação |
 |---|---------|------------------------|--------------|
 | 1 | Clientes duplicados | Formulário de cadastro enviado duas vezes, sem constraint única em email/documento | [Relatório](investigacoes/01-clientes-duplicados/README.md) |
-| 2 | Foreign key órfã | Cliente removido diretamente no banco (acesso de suporte), sem tratar os pedidos vinculados | Em andamento |
+| 2 | Foreign key órfã | Cliente removido diretamente no banco (acesso de suporte), sem tratar os pedidos vinculados | [Relatório](investigacoes/02-fk-orfa/README.md) |
 | 3 | Status inconsistente | Pedido marcado "entregue" sem pagamento aprovado; pedido "cancelado" com pagamento ainda "aprovado" | Em andamento |
 | 4 | Data inválida | Importação em lote gravou a data de processamento, não a data real do pagamento | Em andamento |
 

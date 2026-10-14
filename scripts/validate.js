@@ -39,8 +39,8 @@ const CHECKS = [
     esperadoQuebrado: 1,
   },
   {
-    label: 'pedidos com cliente_id órfão',
-    sql: `SELECT p.id FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL`,
+    label: 'registros órfãos (FK apontando para registro inexistente)',
+    sql: readDeteccao('02-fk-orfa'),
     esperadoValido: 0,
     esperadoQuebrado: 1,
   },
