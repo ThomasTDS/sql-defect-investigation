@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    name: Validação (Postgres embarcado)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run validate
+
+  docker:
+    name: Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # --wait só retorna quando o healthcheck passa, ou seja, depois que
+      # todos os scripts de sql/ foram carregados (o healthcheck usa TCP,
+      # que só abre ao fim da inicialização).
+      - name: Subir o banco
+        run: docker compose up -d --wait
+
+      # Confere que as três camadas (schema, massa válida e massa quebrada)
+      # foram carregadas: 10 clientes da massa válida + 1 duplicado = 11, e
+      # o pedido órfão da massa quebrada está lá.
+      - name: Conferir dados carregados
+        run: |
+          query() {
+            docker compose exec -T postgres psql -U postgres -d defect_investigation -tAc "$1"
+          }
+          clientes=$(query "SELECT COUNT(*) FROM clientes")
+          orfaos=$(query "SELECT COUNT(*) FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL")
+          echo "clientes: $clientes (esperado 11)"
+          echo "pedidos órfãos: $orfaos (esperado 1)"
+          [ "$clientes" = "11" ] && [ "$orfaos" = "1" ]
+
+      - name: Logs do container em caso de falha
+        if: failure()
+        run: docker compose logs postgres
+
+      - name: Derrubar o banco
+        if: always()
+        run: docker compose down -v

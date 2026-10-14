@@ -1,5 +1,6 @@
 # 🔎 SQL Defect Investigation
 
+![CI](https://github.com/ThomasTDS/sql-defect-investigation/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 ![postgres](https://img.shields.io/badge/PostgreSQL-16-blue.svg)
 
@@ -17,6 +18,8 @@ Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de u
 
 ```text
 sql-defect-investigation/
+├── .github/workflows/
+│   └── ci.yml                 # CI: validação com Postgres embarcado + Docker Compose
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
 │   ├── 02_seed_valido.sql     # massa de dados limpa (controle)
@@ -53,6 +56,15 @@ npm run validate
 ```
 
 Isso baixa um binário real do PostgreSQL 16, a mesma versão usada no Docker, sem precisar de Docker instalado. Em seguida, sobe um banco temporário, carrega o schema e as duas massas de dados, e confirma que cada defeito esperado é encontrado pelas queries de investigação — e que a massa "válida", sozinha, não aciona nenhuma delas.
+
+---
+
+## Integração contínua
+
+A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em paralelo:
+
+- **Validação (Postgres embarcado):** executa `npm run validate`, os mesmos checks da Opção 2.
+- **Docker Compose:** sobe o banco com `docker compose up --wait` e confere que o schema e as duas massas de dados foram carregados de verdade, garantindo que a Opção 1 também funciona.
 
 ---
 
