@@ -35,37 +35,37 @@ INSERT INTO produtos (nome, preco, categoria) VALUES
 -- cada um com pagamento compatível com o status do pedido.
 
 INSERT INTO pedidos (cliente_id, vendedor_id, data_pedido, status, valor_total) VALUES
-    (1, 1, '2026-01-11 10:00:00', 'entregue',   149.80),
+    (1, 1, '2026-01-11 10:00:00', 'entregue',   129.80),
     (2, 1, '2026-01-13 15:00:00', 'entregue',   99.90),
     (3, 2, '2026-01-16 11:30:00', 'confirmado', 249.90),
     (4, 2, '2026-01-19 17:00:00', 'cancelado',  49.90),
-    (5, 3, '2026-01-21 10:45:00', 'entregue',   569.90),
+    (5, 3, '2026-01-21 10:45:00', 'entregue',   650.00),
     (7, 3, '2026-01-26 10:10:00', 'pendente',   119.90),
     (8, 4, '2026-01-29 15:30:00', 'confirmado', 79.90),
-    (9, 4, '2026-02-03 13:00:00', 'entregue',   209.80),
+    (9, 4, '2026-02-03 13:00:00', 'entregue',   249.90),
     (10,1, '2026-02-06 09:20:00', 'pendente',   150.00);
 
 INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario) VALUES
     (1, 1, 1, 49.90),
-    (1, 6, 1, 99.90),
+    (1, 6, 1, 79.90),
     (2, 2, 1, 99.90),
     (3, 3, 1, 249.90),
     (4, 1, 1, 49.90),
     (5, 4, 1, 500.00),
-    (5, 5, 1, 69.90),
+    (5, 5, 1, 150.00),
     (6, 7, 1, 119.90),
     (7, 6, 1, 79.90),
-    (8, 3, 1, 209.80),
+    (8, 3, 1, 249.90),
     (9, 5, 1, 150.00);
 
 -- Pagamentos condizentes com o status de cada pedido.
 INSERT INTO pagamentos (pedido_id, valor, data_pagamento, status) VALUES
-    (1, 149.80, '2026-01-11 10:05:00', 'aprovado'),
+    (1, 129.80, '2026-01-11 10:05:00', 'aprovado'),
     (2, 99.90,  '2026-01-13 15:10:00', 'aprovado'),
     (3, 249.90, '2026-01-16 11:40:00', 'aprovado'),
     (4, 49.90,  '2026-01-19 17:05:00', 'estornado'),
-    (5, 569.90, '2026-01-21 10:50:00', 'aprovado'),
+    (5, 650.00, '2026-01-21 10:50:00', 'aprovado'),
     (7, 79.90,  '2026-01-29 15:35:00', 'aprovado'),
-    (8, 209.80, '2026-02-03 13:05:00', 'aprovado');
+    (8, 249.90, '2026-02-03 13:05:00', 'aprovado');
 -- Pedidos 6 (pendente) e 9 (pendente) ainda não têm pagamento registrado —
 -- comportamento esperado para pedidos que ainda não foram confirmados.
