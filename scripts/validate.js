@@ -45,20 +45,13 @@ const CHECKS = [
     esperadoQuebrado: 1,
   },
   {
-    label: 'pedidos entregues sem pagamento aprovado',
-    sql: `SELECT p.id FROM pedidos p
-          WHERE p.status = 'entregue'
-            AND NOT EXISTS (SELECT 1 FROM pagamentos pg WHERE pg.pedido_id = p.id AND pg.status = 'aprovado')`,
+    // 3 na massa quebrada: os 2 casos plantados (pedidos 11 e 12) e o
+    // pedido órfão da investigação 02 (pedido 10), que também está
+    // "confirmado" sem pagamento.
+    label: 'pedidos com status incompatível com o pagamento',
+    sql: readDeteccao('03-status-inconsistente'),
     esperadoValido: 0,
-    esperadoQuebrado: 1,
-  },
-  {
-    label: 'pedidos cancelados com pagamento aprovado',
-    sql: `SELECT p.id FROM pedidos p
-          JOIN pagamentos pg ON pg.pedido_id = p.id
-          WHERE p.status = 'cancelado' AND pg.status = 'aprovado'`,
-    esperadoValido: 0,
-    esperadoQuebrado: 1,
+    esperadoQuebrado: 3,
   },
   {
     label: 'pagamentos com data anterior ao pedido',
