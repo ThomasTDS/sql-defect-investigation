@@ -1,5 +1,7 @@
 # 🔎 SQL Defect Investigation
 
+**Português** · [English](README.en.md)
+
 ![CI](https://github.com/ThomasTDS/sql-defect-investigation/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 ![postgres](https://img.shields.io/badge/PostgreSQL-16-blue.svg)
@@ -105,7 +107,8 @@ sql-defect-investigation/
 ├── docker-compose.yml         # Postgres pronto, já carregado com os dados
 ├── package.json
 ├── LICENSE
-└── README.md
+├── README.md                  # português
+└── README.en.md               # inglês
 ```
 
 ---
