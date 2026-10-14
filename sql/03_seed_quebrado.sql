@@ -1,4 +1,4 @@
--- Introduz, de propósito, os 4 tipos de defeito investigados neste projeto.
+-- Introduz, de propósito, os 5 tipos de defeito investigados neste projeto.
 -- Cada bloco está comentado com o cenário real que ele simula. Execute
 -- depois de 01_schema.sql + 02_seed_valido.sql.
 
@@ -71,3 +71,17 @@ VALUES (currval('pedidos_id_seq'), 5, 1, 150.00);
 INSERT INTO pagamentos (pedido_id, valor, data_pagamento, status)
 VALUES (currval('pedidos_id_seq'), 150.00, '2026-02-08 10:00:00', 'aprovado');
 -- data_pagamento (08/02) é anterior a data_pedido (10/02).
+
+-- =====================================================================
+-- DEFEITO 5: Pagamento em duplicidade
+-- Cenário real: o gateway confirmou o pagamento do pedido 2 por webhook,
+-- mas a aplicação demorou a responder; o gateway entendeu como falha e
+-- reenviou a mesma confirmação 4 segundos depois. Sem chave de
+-- idempotência (id da transação no gateway), a aplicação registrou as
+-- duas. O cliente foi cobrado uma vez só: a duplicidade existe apenas
+-- no banco.
+-- =====================================================================
+INSERT INTO pagamentos (pedido_id, valor, data_pagamento, status)
+VALUES (2, 99.90, '2026-01-13 15:10:04', 'aprovado');
+-- Mesmo pedido, mesmo valor e 4 segundos depois do pagamento original
+-- (id 2, 15:10:00).

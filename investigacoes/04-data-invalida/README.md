@@ -17,7 +17,7 @@ Arquivos desta investigação:
 
 ## 1. Sintoma relatado
 
-> Chamado do financeiro: o indicador **"tempo médio até a aprovação do pagamento"** do painel está **negativo** (cerca de -6 horas). Pelo processo, o pagamento é aprovado alguns minutos depois do pedido.
+> Chamado do financeiro: o indicador **"tempo médio até a aprovação do pagamento"** do painel está **negativo** (cerca de -5 horas). Pelo processo, o pagamento é aprovado alguns minutos depois do pedido.
 
 Um tempo médio negativo é impossível no mundo real. Como é uma média, basta um registro muito errado para puxar tudo para baixo, então a investigação começa procurando quem está distorcendo a conta.
 
@@ -47,9 +47,9 @@ WHERE pg.status = 'aprovado';
 
 | qtd_pagamentos_aprovados | menor_tempo | maior_tempo | tempo_medio |
 |---|---|---|---|
-| 8 | **-2 days** | 00:10:00 | **-05:54:22.5** |
+| 9 | **-2 days** | 00:10:04 | **-05:13:52.9** |
 
-**Achado:** **H1 descartada.** O banco reproduz o número do painel: o tempo médio é de quase -6 horas. O painel está calculando certo, e o problema está nos dados. O `menor_tempo` de **-2 dias** já mostra que existe pelo menos um pagamento aprovado dois dias antes do pedido.
+**Achado:** **H1 descartada.** O banco reproduz o número do painel: o tempo médio passa de -5 horas. O painel está calculando certo, e o problema está nos dados. O `menor_tempo` de **-2 dias** já mostra que existe pelo menos um pagamento aprovado dois dias antes do pedido.
 
 ### Passo 2: o tempo de cada pagamento
 
@@ -59,21 +59,24 @@ SELECT pg.id AS pagamento_id, p.id AS pedido_id, p.data_pedido, pg.data_pagament
 FROM pagamentos pg
 JOIN pedidos p ON p.id = pg.pedido_id
 WHERE pg.status = 'aprovado'
-ORDER BY tempo_ate_aprovacao;
+ORDER BY tempo_ate_aprovacao, pg.id;
 ```
 
 | pagamento_id | pedido_id | data_pedido | data_pagamento | tempo_ate_aprovacao |
 |---|---|---|---|---|
 | **10** | **13** | **2026-02-10 10:00:00** | **2026-02-08 10:00:00** | **-2 days** |
+| 1 | 1 | 2026-01-11 10:00:00 | 2026-01-11 10:05:00 | 00:05:00 |
+| 5 | 5 | 2026-01-21 10:45:00 | 2026-01-21 10:50:00 | 00:05:00 |
 | 6 | 7 | 2026-01-29 15:30:00 | 2026-01-29 15:35:00 | 00:05:00 |
 | 7 | 8 | 2026-02-03 13:00:00 | 2026-02-03 13:05:00 | 00:05:00 |
 | 9 | 12 | 2026-02-01 14:00:00 | 2026-02-01 14:05:00 | 00:05:00 |
-| 5 | 5 | 2026-01-21 10:45:00 | 2026-01-21 10:50:00 | 00:05:00 |
-| 1 | 1 | 2026-01-11 10:00:00 | 2026-01-11 10:05:00 | 00:05:00 |
-| 3 | 3 | 2026-01-16 11:30:00 | 2026-01-16 11:40:00 | 00:10:00 |
 | 2 | 2 | 2026-01-13 15:00:00 | 2026-01-13 15:10:00 | 00:10:00 |
+| 3 | 3 | 2026-01-16 11:30:00 | 2026-01-16 11:40:00 | 00:10:00 |
+| 11 | 2 | 2026-01-13 15:00:00 | 2026-01-13 15:10:04 | 00:10:04 |
 
-**Achado:** **H2 confirmada.** Um único pagamento (`10`) explica todo o desvio. Sem ele, o tempo médio volta para **6min26s**, coerente com o processo. Os outros sete seguem um padrão claro: são aprovados **5 a 10 minutos depois** do pedido.
+**Achado:** **H2 confirmada.** Um único pagamento (`10`) explica todo o desvio. Sem ele, o tempo médio volta para **6min53s**, coerente com o processo. Os outros oito seguem um padrão claro: são aprovados **5 a 10 minutos depois** do pedido.
+
+O pagamento `11` chama atenção por outro motivo: ele é do mesmo pedido `2` que o pagamento `2`, tem o mesmo valor e veio 4 segundos depois. É uma duplicidade, investigada à parte na [investigação 05](../05-pagamento-duplicado/README.md). Como o tempo dele é normal, ele não muda a conclusão desta investigação.
 
 Mais três observações sobre o pagamento 10, que ajudam a separar as hipóteses H3 a H5:
 
@@ -161,7 +164,7 @@ Triggers: **nenhuma.**
 
 ## 5. Impacto
 
-- **Indicadores:** o "tempo médio até aprovação" sai negativo (-5h54min no lugar de 6min26s). Qualquer indicador por período também atribui R$ 150,00 ao dia 08/02, quando o pedido nem existia.
+- **Indicadores:** o "tempo médio até aprovação" sai negativo (-5h14min no lugar de 6min53s). Qualquer indicador por período também atribui R$ 150,00 ao dia 08/02, quando o pedido nem existia.
 - **Conciliação:** um cruzamento com o extrato do gateway por data não vai encontrar esse pagamento no dia 08/02, e vai gerar uma divergência falsa nos dois dias.
 - **Cliente:** nenhum, já que o pagamento foi feito e o pedido está correto.
 

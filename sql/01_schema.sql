@@ -1,7 +1,8 @@
 -- Schema de um CRM/ERP de vendas genérico: clientes, vendedores, catálogo,
 -- pedidos e pagamentos. Modelo propositalmente simples, mas realista o
 -- bastante pra sustentar os tipos de defeito investigados neste projeto
--- (duplicidade, FK órfã, status inconsistente, data inválida).
+-- (duplicidade, FK órfã, status inconsistente, data inválida, pagamento em
+-- duplicidade).
 
 CREATE TABLE clientes (
     id SERIAL PRIMARY KEY,
