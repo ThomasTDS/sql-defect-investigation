@@ -153,6 +153,24 @@ Colunas das duas tabelas:
 
 **Achado:** também não há nenhuma coluna de "atualizado em", nem uma tabela de histórico de status. O banco guarda só o status **atual**, não **quando** nem **por quem** ele mudou. Por isso, no pedido 12, dá para saber que o pagamento foi aprovado às 14:05, mas não quando o pedido foi cancelado.
 
+### Observação fora do escopo: cliente inativo com pedido entregue
+
+Durante o passo 4, um detalhe chamou atenção: o pedido 11 é do cliente 6, que está **inativo**.
+
+```sql
+SELECT c.id AS cliente_id, c.nome, c.status AS status_cliente, c.data_cadastro,
+       p.id AS pedido_id, p.data_pedido, p.status AS status_pedido
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+WHERE c.status = 'inativo';
+```
+
+| cliente_id | nome | status_cliente | data_cadastro | pedido_id | data_pedido | status_pedido |
+|---|---|---|---|---|---|---|
+| 6 | Fábio Nunes Castro | inativo | 2026-01-22 13:10:00 | 11 | 2026-01-24 09:00:00 | entregue |
+
+Isso **não foi classificado como defeito**. O cliente pode ter ficado inativo depois da compra, o que é normal. Mas, pela mesma falta de histórico apontada acima, o banco não registra **quando** o status do cliente mudou, então não dá para confirmar. Fica como pergunta para o negócio: um cliente inativo pode comprar? Se não puder, vale uma regra na aplicação e uma nova detecção.
+
 ## 4. Causa raiz
 
 1. **Aplicação (causa raiz):** o status do pedido e o do pagamento são atualizados por processos independentes, sem amarração entre eles. O cancelamento muda o pedido e não aciona o estorno (pedido 12). A entrega muda o pedido e não confere o pagamento (pedido 11).

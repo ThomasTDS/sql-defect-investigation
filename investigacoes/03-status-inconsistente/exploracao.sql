@@ -94,3 +94,11 @@ SELECT table_name, column_name, data_type
 FROM information_schema.columns
 WHERE table_name IN ('pedidos', 'pagamentos')
 ORDER BY table_name, ordinal_position;
+
+-- Observação fora do escopo: clientes inativos e seus pedidos.
+SELECT c.id AS cliente_id, c.nome, c.status AS status_cliente, c.data_cadastro,
+       p.id AS pedido_id, p.data_pedido, p.status AS status_pedido
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+WHERE c.status = 'inativo'
+ORDER BY c.id, p.id;
