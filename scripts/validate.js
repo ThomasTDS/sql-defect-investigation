@@ -15,12 +15,60 @@ const fs = require('node:fs');
 const { Client } = require('pg');
 
 const SQL_DIR = path.join(__dirname, '..', 'sql');
+const INVESTIGACOES_DIR = path.join(__dirname, '..', 'investigacoes');
 const PORT = 5433;
 const DATA_DIR = path.join(__dirname, '..', '.pgdata-validate');
 
 function readSql(filename) {
   return fs.readFileSync(path.join(SQL_DIR, filename), 'utf-8');
 }
+
+function readDeteccao(investigacao) {
+  return fs.readFileSync(path.join(INVESTIGACOES_DIR, investigacao, 'deteccao.sql'), 'utf-8');
+}
+
+// Cada check é uma query de detecção que devolve uma linha por registro
+// com defeito, e quantas linhas ela deve devolver em cada etapa. Quando a
+// investigação do defeito já existe, a query vem do deteccao.sql dela —
+// assim o que está documentado é exatamente o que é testado.
+const CHECKS = [
+  {
+    label: 'pares de clientes duplicados (mesmo email ou documento)',
+    sql: readDeteccao('01-clientes-duplicados'),
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
+    label: 'pedidos com cliente_id órfão',
+    sql: `SELECT p.id FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL`,
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
+    label: 'pedidos entregues sem pagamento aprovado',
+    sql: `SELECT p.id FROM pedidos p
+          WHERE p.status = 'entregue'
+            AND NOT EXISTS (SELECT 1 FROM pagamentos pg WHERE pg.pedido_id = p.id AND pg.status = 'aprovado')`,
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
+    label: 'pedidos cancelados com pagamento aprovado',
+    sql: `SELECT p.id FROM pedidos p
+          JOIN pagamentos pg ON pg.pedido_id = p.id
+          WHERE p.status = 'cancelado' AND pg.status = 'aprovado'`,
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
+    label: 'pagamentos com data anterior ao pedido',
+    sql: `SELECT pg.id FROM pagamentos pg
+          JOIN pedidos p ON p.id = pg.pedido_id
+          WHERE pg.data_pagamento IS NOT NULL AND pg.data_pagamento < p.data_pedido`,
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+];
 
 async function freshClient() {
   const client = new Client({
@@ -38,12 +86,19 @@ async function resetDatabase(client) {
   await client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
 }
 
-async function expectCount(client, label, sql, expected) {
-  const result = await client.query(sql);
-  const count = Number(result.rows[0].count);
-  const ok = count === expected;
-  console.log(`  ${ok ? '✔' : '✘'} ${label}: esperado ${expected}, encontrado ${count}`);
-  if (!ok) process.exitCode = 1;
+async function runChecks(client, campoEsperado) {
+  for (const check of CHECKS) {
+    // A query é usada como subquery: tira o ";" final, e a quebra de linha
+    // antes do ")" evita que um comentário "--" no fim do arquivo comente
+    // o fechamento do parêntese.
+    const sql = check.sql.trim().replace(/;$/, '');
+    const result = await client.query(`SELECT COUNT(*) AS count FROM (${sql}\n) AS deteccao`);
+    const count = Number(result.rows[0].count);
+    const expected = check[campoEsperado];
+    const ok = count === expected;
+    console.log(`  ${ok ? '✔' : '✘'} ${check.label}: esperado ${expected}, encontrado ${count}`);
+    if (!ok) process.exitCode = 1;
+  }
 }
 
 async function main() {
@@ -66,88 +121,14 @@ async function main() {
     await resetDatabase(client);
     await client.query(readSql('01_schema.sql'));
     await client.query(readSql('02_seed_valido.sql'));
-
-    await expectCount(
-      client,
-      'pares de clientes duplicados (mesmo email ou documento)',
-      `SELECT COUNT(*) FROM clientes a
-       JOIN clientes b ON a.id < b.id AND (a.email = b.email OR a.documento = b.documento)`,
-      0
-    );
-    await expectCount(
-      client,
-      'pedidos com cliente_id órfão',
-      `SELECT COUNT(*) FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL`,
-      0
-    );
-    await expectCount(
-      client,
-      'pedidos entregues sem pagamento aprovado',
-      `SELECT COUNT(*) FROM pedidos p
-       WHERE p.status = 'entregue'
-         AND NOT EXISTS (SELECT 1 FROM pagamentos pg WHERE pg.pedido_id = p.id AND pg.status = 'aprovado')`,
-      0
-    );
-    await expectCount(
-      client,
-      'pedidos cancelados com pagamento aprovado',
-      `SELECT COUNT(*) FROM pedidos p
-       JOIN pagamentos pg ON pg.pedido_id = p.id
-       WHERE p.status = 'cancelado' AND pg.status = 'aprovado'`,
-      0
-    );
-    await expectCount(
-      client,
-      'pagamentos com data anterior ao pedido',
-      `SELECT COUNT(*) FROM pagamentos pg
-       JOIN pedidos p ON p.id = pg.pedido_id
-       WHERE pg.data_pagamento IS NOT NULL AND pg.data_pagamento < p.data_pedido`,
-      0
-    );
+    await runChecks(client, 'esperadoValido');
 
     console.log('\n--- Etapa 2: schema + massa válida + massa QUEBRADA (defeitos esperados) ---');
     await resetDatabase(client);
     await client.query(readSql('01_schema.sql'));
     await client.query(readSql('02_seed_valido.sql'));
     await client.query(readSql('03_seed_quebrado.sql'));
-
-    await expectCount(
-      client,
-      'pares de clientes duplicados (mesmo email ou documento)',
-      `SELECT COUNT(*) FROM clientes a
-       JOIN clientes b ON a.id < b.id AND (a.email = b.email OR a.documento = b.documento)`,
-      1
-    );
-    await expectCount(
-      client,
-      'pedidos com cliente_id órfão',
-      `SELECT COUNT(*) FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL`,
-      1
-    );
-    await expectCount(
-      client,
-      'pedidos entregues sem pagamento aprovado',
-      `SELECT COUNT(*) FROM pedidos p
-       WHERE p.status = 'entregue'
-         AND NOT EXISTS (SELECT 1 FROM pagamentos pg WHERE pg.pedido_id = p.id AND pg.status = 'aprovado')`,
-      1
-    );
-    await expectCount(
-      client,
-      'pedidos cancelados com pagamento aprovado',
-      `SELECT COUNT(*) FROM pedidos p
-       JOIN pagamentos pg ON pg.pedido_id = p.id
-       WHERE p.status = 'cancelado' AND pg.status = 'aprovado'`,
-      1
-    );
-    await expectCount(
-      client,
-      'pagamentos com data anterior ao pedido',
-      `SELECT COUNT(*) FROM pagamentos pg
-       JOIN pedidos p ON p.id = pg.pedido_id
-       WHERE pg.data_pagamento IS NOT NULL AND pg.data_pagamento < p.data_pedido`,
-      1
-    );
+    await runChecks(client, 'esperadoQuebrado');
 
     await client.end();
   } finally {
@@ -162,7 +143,13 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Sai explicitamente com o código certo: o embedded-postgres registra um
+// gancho de saída (async-exit-hook) que, se o processo terminar sozinho,
+// chama process.exit(0) e descarta o process.exitCode = 1 dos checks que
+// falharam — e a CI ficaria verde mesmo com defeito.
+main()
+  .then(() => process.exit(process.exitCode || 0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
