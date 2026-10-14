@@ -28,6 +28,7 @@ sql-defect-investigation/
 │   ├── 02-fk-orfa/            # mesma estrutura
 │   ├── 03-status-inconsistente/   # mesma estrutura
 │   └── 04-data-invalida/          # mesma estrutura
+├── validacoes/                # regras de consistência de valores (total, pagamento, catálogo)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
 │   ├── 02_seed_valido.sql     # massa de dados limpa (controle)
@@ -117,6 +118,8 @@ Basta trocar a pasta para rodar as outras investigações.
 ### Implementação
 
 Cada defeito está implementado e comentado em `sql/03_seed_quebrado.sql`. Cada investigação fica em `investigacoes/`, com um relatório completo e a query de detecção (`deteccao.sql`), que a CI executa contra as duas massas de dados. Assim, o que está documentado é exatamente o que é testado.
+
+Além dos 4 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
 
 ---
 
