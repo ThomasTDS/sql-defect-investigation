@@ -47,6 +47,17 @@ jobs:
           echo "pedidos órfãos: $orfaos (esperado 1)"
           [ "$clientes" = "11" ] && [ "$orfaos" = "1" ]
 
+      # Roda cada exploracao.sql do jeito que o "Como reproduzir" dos
+      # relatórios ensina. Com ON_ERROR_STOP, o psql sai com erro na
+      # primeira query que falhar, e o job falha junto.
+      - name: Executar as explorações das investigações
+        run: |
+          for arquivo in investigacoes/*/exploracao.sql; do
+            echo "::group::$arquivo"
+            docker compose exec -T postgres psql -U postgres -d defect_investigation -v ON_ERROR_STOP=1 < "$arquivo"
+            echo "::endgroup::"
+          done
+
       - name: Logs do container em caso de falha
         if: failure()
         run: docker compose logs postgres
