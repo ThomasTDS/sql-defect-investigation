@@ -14,6 +14,72 @@ Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de u
 
 ---
 
+## Modelo de dados
+
+Um CRM/ERP de vendas: clientes fazem pedidos, que podem ser atendidos por um vendedor, contêm itens do catálogo de produtos e recebem pagamentos.
+
+```mermaid
+erDiagram
+    clientes ||--o{ pedidos : "faz"
+    vendedores |o--o{ pedidos : "atende"
+    pedidos ||--o{ itens_pedido : "contém"
+    produtos ||--o{ itens_pedido : "aparece em"
+    pedidos ||--o{ pagamentos : "recebe"
+
+    clientes {
+        int id PK
+        varchar nome
+        varchar email "sem UNIQUE (inv. 01)"
+        varchar documento "sem UNIQUE (inv. 01)"
+        varchar telefone "opcional"
+        timestamp data_cadastro
+        varchar status "ativo | inativo"
+    }
+
+    vendedores {
+        int id PK
+        varchar nome
+        varchar email UK
+        varchar equipe "opcional"
+    }
+
+    produtos {
+        int id PK
+        varchar nome
+        numeric preco "CHECK >= 0"
+        varchar categoria "opcional"
+    }
+
+    pedidos {
+        int id PK
+        int cliente_id FK "NOT VALID na massa quebrada (inv. 02)"
+        int vendedor_id FK "opcional"
+        timestamp data_pedido
+        varchar status "sem CHECK (inv. 03)"
+        numeric valor_total "= soma dos itens (validacoes/)"
+    }
+
+    itens_pedido {
+        int id PK
+        int pedido_id FK
+        int produto_id FK
+        int quantidade "CHECK > 0"
+        numeric preco_unitario
+    }
+
+    pagamentos {
+        int id PK
+        int pedido_id FK
+        numeric valor
+        timestamp data_pagamento "opcional, sem validação (inv. 04)"
+        varchar status "sem CHECK (inv. 03)"
+    }
+```
+
+As anotações **inv. 01** a **inv. 04** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-4-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
+
+---
+
 ## Estrutura do Projeto
 
 ```text
