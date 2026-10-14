@@ -16,6 +16,7 @@ const { Client } = require('pg');
 
 const SQL_DIR = path.join(__dirname, '..', 'sql');
 const INVESTIGACOES_DIR = path.join(__dirname, '..', 'investigacoes');
+const VALIDACOES_DIR = path.join(__dirname, '..', 'validacoes');
 const PORT = 5433;
 const DATA_DIR = path.join(__dirname, '..', '.pgdata-validate');
 
@@ -27,10 +28,15 @@ function readDeteccao(investigacao) {
   return fs.readFileSync(path.join(INVESTIGACOES_DIR, investigacao, 'deteccao.sql'), 'utf-8');
 }
 
+function readValidacao(filename) {
+  return fs.readFileSync(path.join(VALIDACOES_DIR, filename), 'utf-8');
+}
+
 // Cada check é uma query de detecção que devolve uma linha por registro
 // com defeito, e quantas linhas ela deve devolver em cada etapa. A query
-// vem do deteccao.sql da investigação correspondente — assim o que está
-// documentado é exatamente o que é testado.
+// vem de um arquivo .sql documentado (o deteccao.sql de cada investigação,
+// ou uma regra de validacoes/) — assim o que está documentado é exatamente
+// o que é testado. Esperado null = o check não se aplica àquela etapa.
 const CHECKS = [
   {
     label: 'pares de clientes duplicados (mesmo email ou documento)',
@@ -59,6 +65,27 @@ const CHECKS = [
     esperadoValido: 0,
     esperadoQuebrado: 1,
   },
+  {
+    // 1 na massa quebrada: o pedido 10 tem valor_total e nenhum item.
+    label: 'pedidos com total diferente da soma dos itens',
+    sql: readValidacao('total-pedido-igual-soma-itens.sql'),
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
+    label: 'pedidos com pagamentos aprovados diferentes do total',
+    sql: readValidacao('pagamento-igual-total-pedido.sql'),
+    esperadoValido: 0,
+    esperadoQuebrado: 0,
+  },
+  {
+    // Premissa da massa de controle, não regra de negócio: ver o
+    // comentário no próprio arquivo .sql.
+    label: 'itens com preço diferente do catálogo (premissa da massa de controle)',
+    sql: readValidacao('item-igual-preco-catalogo.sql'),
+    esperadoValido: 0,
+    esperadoQuebrado: null,
+  },
 ];
 
 async function freshClient() {
@@ -79,13 +106,15 @@ async function resetDatabase(client) {
 
 async function runChecks(client, campoEsperado) {
   for (const check of CHECKS) {
+    const expected = check[campoEsperado];
+    if (expected === null) continue;
+
     // A query é usada como subquery: tira o ";" final, e a quebra de linha
     // antes do ")" evita que um comentário "--" no fim do arquivo comente
     // o fechamento do parêntese.
     const sql = check.sql.trim().replace(/;$/, '');
     const result = await client.query(`SELECT COUNT(*) AS count FROM (${sql}\n) AS deteccao`);
     const count = Number(result.rows[0].count);
-    const expected = check[campoEsperado];
     const ok = count === expected;
     console.log(`  ${ok ? '✔' : '✘'} ${check.label}: esperado ${expected}, encontrado ${count}`);
     if (!ok) process.exitCode = 1;
