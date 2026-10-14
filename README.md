@@ -52,7 +52,7 @@ npm install
 npm run validate
 ```
 
-Isso baixa um binário real do PostgreSQL (sem precisar de Docker instalado), sobe um banco temporário, carrega o schema e as duas massas de dados, e confirma que cada defeito esperado é encontrado pelas queries de investigação — e que a massa "válida", sozinha, não aciona nenhuma delas.
+Isso baixa um binário real do PostgreSQL 16, a mesma versão usada no Docker, sem precisar de Docker instalado. Em seguida, sobe um banco temporário, carrega o schema e as duas massas de dados, e confirma que cada defeito esperado é encontrado pelas queries de investigação — e que a massa "válida", sozinha, não aciona nenhuma delas.
 
 ---
 
