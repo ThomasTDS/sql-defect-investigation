@@ -164,6 +164,8 @@ A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em 
 
 O resultado de cada conferência aparece numa tabela no resumo da execução, na aba **Actions** do GitHub, sem precisar abrir os logs.
 
+As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)): uma vez por mês, ele abre no máximo um PR para as dependências npm e um para as actions da CI, que passam pela mesma CI. A versão major do `embedded-postgres` fica de fora, porque ela define a versão do Postgres da validação local, que precisa continuar igual à do Docker.
+
 ---
 
 ## Os 5 defeitos investigados
