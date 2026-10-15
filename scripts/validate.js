@@ -10,19 +10,13 @@
 //    confirma que cada defeito esperado é encontrado.
 
 const path = require('node:path');
-const EmbeddedPostgres = require('embedded-postgres').default;
 const fs = require('node:fs');
-const { Client } = require('pg');
+const { comPostgresEmbarcado, recriarBanco, executar } = require('./postgres-embarcado');
 
-const SQL_DIR = path.join(__dirname, '..', 'sql');
 const INVESTIGACOES_DIR = path.join(__dirname, '..', 'investigacoes');
 const VALIDACOES_DIR = path.join(__dirname, '..', 'validacoes');
 const PORT = 5433;
 const DATA_DIR = path.join(__dirname, '..', '.pgdata-validate');
-
-function readSql(filename) {
-  return fs.readFileSync(path.join(SQL_DIR, filename), 'utf-8');
-}
 
 function readDeteccao(investigacao) {
   return fs.readFileSync(path.join(INVESTIGACOES_DIR, investigacao, 'deteccao.sql'), 'utf-8');
@@ -96,22 +90,6 @@ const CHECKS = [
   },
 ];
 
-async function freshClient() {
-  const client = new Client({
-    host: 'localhost',
-    port: PORT,
-    user: 'postgres',
-    password: 'postgres',
-    database: 'postgres',
-  });
-  await client.connect();
-  return client;
-}
-
-async function resetDatabase(client) {
-  await client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
-}
-
 // Resultado de cada check executado, usado no resumo da CI.
 const resultados = [];
 
@@ -155,39 +133,15 @@ function escreverResumoCi() {
 }
 
 async function main() {
-  const pg = new EmbeddedPostgres({
-    databaseDir: DATA_DIR,
-    user: 'postgres',
-    password: 'postgres',
-    port: PORT,
-    persistent: false,
-  });
-
-  console.log('Subindo Postgres (embarcado, sem Docker)...');
-  await pg.initialise();
-  await pg.start();
-
-  try {
-    const client = await freshClient();
-
+  await comPostgresEmbarcado({ porta: PORT, pasta: DATA_DIR }, async (client) => {
     console.log('\n--- Etapa 1: schema + massa VÁLIDA (deve estar 100% limpa) ---');
-    await resetDatabase(client);
-    await client.query(readSql('01_schema.sql'));
-    await client.query(readSql('02_seed_valido.sql'));
+    await recriarBanco(client, ['01_schema.sql', '02_seed_valido.sql']);
     await runChecks(client, 'Massa válida', 'esperadoValido');
 
     console.log('\n--- Etapa 2: schema + massa válida + massa QUEBRADA (defeitos esperados) ---');
-    await resetDatabase(client);
-    await client.query(readSql('01_schema.sql'));
-    await client.query(readSql('02_seed_valido.sql'));
-    await client.query(readSql('03_seed_quebrado.sql'));
+    await recriarBanco(client, ['01_schema.sql', '02_seed_valido.sql', '03_seed_quebrado.sql']);
     await runChecks(client, 'Massa quebrada', 'esperadoQuebrado');
-
-    await client.end();
-  } finally {
-    await pg.stop();
-    fs.rmSync(DATA_DIR, { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
-  }
+  });
 
   escreverResumoCi();
 
@@ -198,13 +152,4 @@ async function main() {
   }
 }
 
-// Sai explicitamente com o código certo: o embedded-postgres registra um
-// gancho de saída (async-exit-hook) que, se o processo terminar sozinho,
-// chama process.exit(0) e descarta o process.exitCode = 1 dos checks que
-// falharam — e a CI ficaria verde mesmo com defeito.
-main()
-  .then(() => process.exit(process.exitCode || 0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+executar(main);

@@ -24,6 +24,10 @@ jobs:
 
       - run: npm run validate
 
+      # Confere se os resultados das explorações ainda batem com o que os
+      # relatórios mostram (investigacoes/*/resultado-esperado.json).
+      - run: npm run relatorios
+
   docker:
     name: Docker Compose
     runs-on: ubuntu-latest

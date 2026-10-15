@@ -1,0 +1,39 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["id","nome","email","documento","telefone","data_cadastro","status"],
+    "linhas": [
+      ["1","Ana Carolina Ferreira","ana.ferreira@example.com","11122233344","11988887777","2026-01-10 09:15:00","ativo"],
+      ["11","Ana C. Ferreira","ana.ferreira@example.com","11122233344","11988887777","2026-01-10 09:17:32","ativo"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["id_original","id_duplicado","nome_original","nome_duplicado","mesmo_email","mesmo_documento","intervalo_entre_cadastros"],
+    "linhas": [
+      ["1","11","Ana Carolina Ferreira","Ana C. Ferreira","t","t","00:02:32"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["cliente_id","nome","data_cadastro","qtd_pedidos","qtd_pagamentos"],
+    "linhas": [
+      ["1","Ana Carolina Ferreira","2026-01-10 09:15:00","1","1"],
+      ["11","Ana C. Ferreira","2026-01-10 09:17:32","0","0"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["constraint_nome","tipo","definicao"],
+    "linhas": [
+      ["clientes_pkey","p","PRIMARY KEY (id)"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["indexname","indexdef"],
+    "linhas": [
+      ["clientes_pkey","CREATE UNIQUE INDEX clientes_pkey ON public.clientes USING btree (id)"]
+    ]
+  }
+]

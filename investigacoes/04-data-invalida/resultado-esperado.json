@@ -1,0 +1,62 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["qtd_pagamentos_aprovados","menor_tempo","maior_tempo","tempo_medio"],
+    "linhas": [
+      ["9","-2 days","00:10:04","-05:13:52.888889"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["pagamento_id","pedido_id","data_pedido","data_pagamento","tempo_ate_aprovacao"],
+    "linhas": [
+      ["10","13","2026-02-10 10:00:00","2026-02-08 10:00:00","-2 days"],
+      ["1","1","2026-01-11 10:00:00","2026-01-11 10:05:00","00:05:00"],
+      ["5","5","2026-01-21 10:45:00","2026-01-21 10:50:00","00:05:00"],
+      ["6","7","2026-01-29 15:30:00","2026-01-29 15:35:00","00:05:00"],
+      ["7","8","2026-02-03 13:00:00","2026-02-03 13:05:00","00:05:00"],
+      ["9","12","2026-02-01 14:00:00","2026-02-01 14:05:00","00:05:00"],
+      ["2","2","2026-01-13 15:00:00","2026-01-13 15:10:00","00:10:00"],
+      ["3","3","2026-01-16 11:30:00","2026-01-16 11:40:00","00:10:00"],
+      ["11","2","2026-01-13 15:00:00","2026-01-13 15:10:04","00:10:04"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["pagamento_id","valor","status_pagamento","data_pagamento","pedido_id","status_pedido","valor_total","data_pedido","cliente","vendedor"],
+    "linhas": [
+      ["10","150.00","aprovado","2026-02-08 10:00:00","13","confirmado","150.00","2026-02-10 10:00:00","Henrique Lopes Teixeira","Thiago Almeida"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["tabela","registro_id","motivo","data_registro","data_referencia"],
+    "linhas": [
+      ["pagamentos","10","pagamento anterior ao pedido","2026-02-08 10:00:00","2026-02-10 10:00:00"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["column_name","data_type","column_default","is_nullable"],
+    "linhas": [
+      ["id","integer","nextval('pagamentos_id_seq'::regclass)","NO"],
+      ["pedido_id","integer",null,"NO"],
+      ["valor","numeric",null,"NO"],
+      ["data_pagamento","timestamp without time zone",null,"YES"],
+      ["status","character varying","'pendente'::character varying","NO"]
+    ]
+  },
+  {
+    "consulta": 6,
+    "colunas": ["conname","contype","definicao"],
+    "linhas": [
+      ["pagamentos_pedido_id_fkey","f","FOREIGN KEY (pedido_id) REFERENCES pedidos(id)"],
+      ["pagamentos_pkey","p","PRIMARY KEY (id)"]
+    ]
+  },
+  {
+    "consulta": 7,
+    "colunas": ["tgname"],
+    "linhas": []
+  }
+]

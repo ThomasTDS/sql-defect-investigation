@@ -96,7 +96,8 @@ sql-defect-investigation/
 │   ├── 01-clientes-duplicados/
 │   │   ├── README.md          # report: symptom → hypotheses → evidence → root cause → fix
 │   │   ├── exploracao.sql     # queries in the order they were used
-│   │   └── deteccao.sql       # final detection query (run by the CI)
+│   │   ├── deteccao.sql       # final detection query (run by the CI)
+│   │   └── resultado-esperado.json  # result of each query in the report (test reference)
 │   ├── 02-fk-orfa/            # same structure
 │   ├── 03-status-inconsistente/   # same structure
 │   ├── 04-data-invalida/          # same structure
@@ -107,7 +108,9 @@ sql-defect-investigation/
 │   ├── 02_seed_valido.sql     # clean dataset (control group)
 │   └── 03_seed_quebrado.sql   # defects introduced on purpose, with comments
 ├── scripts/
-│   └── validate.js            # starts a real Postgres and validates the schema + both datasets
+│   ├── validate.js            # starts a real Postgres and validates the schema + both datasets
+│   ├── relatorios.js          # checks that the reports still match the database
+│   └── postgres-embarcado.js  # helpers shared by both scripts
 ├── docker-compose.yml         # ready-to-use Postgres, already loaded with the data
 ├── package.json
 ├── LICENSE
@@ -148,13 +151,19 @@ npm run validate
 
 This downloads a real PostgreSQL 16 binary, the same version used with Docker, with no need to install Docker. It then starts a temporary database, loads the schema and both datasets, and checks that every expected defect is found by the investigation queries, and that the "valid" dataset alone triggers none of them.
 
+```bash
+npm run relatorios
+```
+
+This runs each investigation's `exploracao.sql` and compares the result of every query with the folder's `resultado-esperado.json`, which holds the same numbers shown in the report. If the data changes and a report becomes outdated, this command fails and points to the investigation, query and row that changed.
+
 ---
 
 ## Continuous integration
 
 On every push to `main` and on every pull request, GitHub Actions runs two jobs in parallel:
 
-- **Validação (Postgres embarcado)** (validation with embedded Postgres): runs `npm run validate`, the same checks as Option 2.
+- **Validação (Postgres embarcado)** (validation with embedded Postgres): runs `npm run validate` and `npm run relatorios`, the same commands as Option 2.
 - **Docker Compose:** starts the database with `docker compose up --wait`, checks that the schema and both datasets were loaded, and runs each investigation's `exploracao.sql`. This ensures that Option 1 works and that every query shown in the reports runs without errors.
 
 The result of each check shows up as a table in the run summary, in the **Actions** tab on GitHub, with no need to open the logs.
@@ -200,6 +209,14 @@ Change the folder to run the other investigations.
 Each defect is implemented and commented in `sql/03_seed_quebrado.sql`. Each investigation lives in `investigacoes/`, with a full report and the detection query (`deteccao.sql`), which the CI runs against both datasets. That way, what is documented is exactly what is tested.
 
 Besides the 5 defects, the validation also checks value consistency rules (order total = sum of its items, approved payments = order total, and item price equal to the catalog price in the control dataset). The rules, and the reason for each one, are in [`validacoes/`](validacoes/README.md) (in Portuguese).
+
+### When the data changes
+
+The reports show real query results, so a change in `sql/` can make them outdated. When that happens, `npm run relatorios` fails (and so does the CI). The way forward is:
+
+1. Fix the `README.md` of the flagged investigation with the new numbers.
+2. Run `npm run relatorios:atualizar`, which rewrites the `resultado-esperado.json` files.
+3. Check in the PR diff that the reference and the report show the same numbers.
 
 ---
 
