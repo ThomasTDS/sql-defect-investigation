@@ -92,7 +92,8 @@ sql-defect-investigation/
 │   ├── 01-clientes-duplicados/
 │   │   ├── README.md          # relatório: sintoma → hipóteses → evidência → causa raiz → correção
 │   │   ├── exploracao.sql     # queries na ordem em que foram usadas
-│   │   └── deteccao.sql       # query final de detecção (executada pela CI)
+│   │   ├── deteccao.sql       # query final de detecção (executada pela CI)
+│   │   └── resultado-esperado.json  # resultado de cada query do relatório (referência do teste)
 │   ├── 02-fk-orfa/            # mesma estrutura
 │   ├── 03-status-inconsistente/   # mesma estrutura
 │   ├── 04-data-invalida/          # mesma estrutura
@@ -103,7 +104,9 @@ sql-defect-investigation/
 │   ├── 02_seed_valido.sql     # massa de dados limpa (controle)
 │   └── 03_seed_quebrado.sql   # defeitos introduzidos de propósito, comentados
 ├── scripts/
-│   └── validate.js            # sobe um Postgres real e valida schema + as duas massas
+│   ├── validate.js            # sobe um Postgres real e valida schema + as duas massas
+│   ├── relatorios.js          # confere se os relatórios continuam batendo com o banco
+│   └── postgres-embarcado.js  # funções compartilhadas pelos dois scripts
 ├── docker-compose.yml         # Postgres pronto, já carregado com os dados
 ├── package.json
 ├── LICENSE
@@ -144,13 +147,19 @@ npm run validate
 
 Isso baixa um binário real do PostgreSQL 16, a mesma versão usada no Docker, sem precisar de Docker instalado. Em seguida, sobe um banco temporário, carrega o schema e as duas massas de dados, e confirma que cada defeito esperado é encontrado pelas queries de investigação — e que a massa "válida", sozinha, não aciona nenhuma delas.
 
+```bash
+npm run relatorios
+```
+
+Isso roda o `exploracao.sql` de cada investigação e compara o resultado de cada query com o `resultado-esperado.json` da pasta, que guarda os mesmos números mostrados no relatório. Se a massa de dados mudar e algum relatório ficar desatualizado, esse comando falha e aponta a investigação, a consulta e a linha que mudaram.
+
 ---
 
 ## Integração contínua
 
 A cada push na `main` e a cada pull request, o GitHub Actions roda dois jobs em paralelo:
 
-- **Validação (Postgres embarcado):** executa `npm run validate`, os mesmos checks da Opção 2.
+- **Validação (Postgres embarcado):** executa `npm run validate` e `npm run relatorios`, os mesmos comandos da Opção 2.
 - **Docker Compose:** sobe o banco com `docker compose up --wait`, confere que o schema e as duas massas de dados foram carregados e executa o `exploracao.sql` de cada investigação. Isso garante que a Opção 1 funciona e que toda query mostrada nos relatórios roda sem erro.
 
 O resultado de cada conferência aparece numa tabela no resumo da execução, na aba **Actions** do GitHub, sem precisar abrir os logs.
@@ -194,6 +203,14 @@ Basta trocar a pasta para rodar as outras investigações.
 Cada defeito está implementado e comentado em `sql/03_seed_quebrado.sql`. Cada investigação fica em `investigacoes/`, com um relatório completo e a query de detecção (`deteccao.sql`), que a CI executa contra as duas massas de dados. Assim, o que está documentado é exatamente o que é testado.
 
 Além dos 5 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
+
+### Quando a massa de dados muda
+
+Os relatórios mostram resultados reais das queries, então uma mudança em `sql/` pode deixá-los desatualizados. Nesse caso, o `npm run relatorios` falha (e a CI também). O caminho é:
+
+1. Corrigir o `README.md` da investigação apontada, com os números novos.
+2. Rodar `npm run relatorios:atualizar`, que regrava os arquivos `resultado-esperado.json`.
+3. Conferir no diff do PR que os números da referência e do relatório são os mesmos.
 
 ---
 

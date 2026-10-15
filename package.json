@@ -4,7 +4,9 @@
   "private": true,
   "description": "Investigação de defeitos de dados num schema de CRM/ERP, usando SQL documentado contra um PostgreSQL real.",
   "scripts": {
-    "validate": "node scripts/validate.js"
+    "validate": "node scripts/validate.js",
+    "relatorios": "node scripts/relatorios.js",
+    "relatorios:atualizar": "node scripts/relatorios.js --atualizar"
   },
   "keywords": [
     "sql",

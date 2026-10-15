@@ -1,0 +1,70 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["pedido_id","data_pedido","status_pedido","valor_total","pagamento_id","status_pagamento","valor_pago","data_pagamento"],
+    "linhas": [
+      ["3","2026-01-16 11:30:00","confirmado","249.90","3","aprovado","249.90","2026-01-16 11:40:00"],
+      ["12","2026-02-01 14:00:00","cancelado","79.90","9","aprovado","79.90","2026-02-01 14:05:00"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["status_pedido","situacao_pagamento","qtd_pedidos","pedidos"],
+    "linhas": [
+      ["cancelado","aprovado","1","12"],
+      ["cancelado","estornado","1","4"],
+      ["confirmado","aprovado","3","3, 7, 13"],
+      ["confirmado","sem pagamento","1","10"],
+      ["entregue","aprovado","4","1, 2, 5, 8"],
+      ["entregue","pendente","1","11"],
+      ["pendente","sem pagamento","2","6, 9"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["pedido_id","status_pedido","situacao_pagamento"],
+    "linhas": [
+      ["10","confirmado","sem pagamento"],
+      ["11","entregue","pendente"],
+      ["12","cancelado","aprovado"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["pedido_id","cliente_id","cliente","data_pedido","status_pedido","valor_total","status_pagamento","valor_pago","data_pagamento"],
+    "linhas": [
+      ["10","12",null,"2025-12-01 10:00:00","confirmado","99.90",null,null,null],
+      ["11","6","Fábio Nunes Castro","2026-01-24 09:00:00","entregue","59.90","pendente","59.90",null],
+      ["12","3","Carla Mendes Souza","2026-02-01 14:00:00","cancelado","79.90","aprovado","79.90","2026-02-01 14:05:00"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["tabela","conname","definicao"],
+    "linhas": []
+  },
+  {
+    "consulta": 6,
+    "colunas": ["table_name","column_name","data_type"],
+    "linhas": [
+      ["pagamentos","id","integer"],
+      ["pagamentos","pedido_id","integer"],
+      ["pagamentos","valor","numeric"],
+      ["pagamentos","data_pagamento","timestamp without time zone"],
+      ["pagamentos","status","character varying"],
+      ["pedidos","id","integer"],
+      ["pedidos","cliente_id","integer"],
+      ["pedidos","vendedor_id","integer"],
+      ["pedidos","data_pedido","timestamp without time zone"],
+      ["pedidos","status","character varying"],
+      ["pedidos","valor_total","numeric"]
+    ]
+  },
+  {
+    "consulta": 7,
+    "colunas": ["cliente_id","nome","status_cliente","data_cadastro","pedido_id","data_pedido","status_pedido"],
+    "linhas": [
+      ["6","Fábio Nunes Castro","inativo","2026-01-22 13:10:00","11","2026-01-24 09:00:00","entregue"]
+    ]
+  }
+]

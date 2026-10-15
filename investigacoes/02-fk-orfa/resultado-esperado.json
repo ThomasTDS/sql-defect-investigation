@@ -1,0 +1,55 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["qtd_pedidos_tabela","total_tabela","qtd_pedidos_relatorio","total_relatorio"],
+    "linhas": [
+      ["13","2168.90","12","2069.00"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["id","cliente_id","vendedor_id","data_pedido","status","valor_total"],
+    "linhas": [
+      ["10","12","1","2025-12-01 10:00:00","confirmado","99.90"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["ultimo_id_gerado","maior_id_existente","qtd_clientes"],
+    "linhas": [
+      ["12","11","11"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["id_gerado_e_ausente"],
+    "linhas": [
+      ["12"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["tabela","constraint_nome","validada","definicao"],
+    "linhas": [
+      ["itens_pedido","itens_pedido_pedido_id_fkey","t","FOREIGN KEY (pedido_id) REFERENCES pedidos(id)"],
+      ["itens_pedido","itens_pedido_produto_id_fkey","t","FOREIGN KEY (produto_id) REFERENCES produtos(id)"],
+      ["pagamentos","pagamentos_pedido_id_fkey","t","FOREIGN KEY (pedido_id) REFERENCES pedidos(id)"],
+      ["pedidos","pedidos_cliente_id_fkey","f","FOREIGN KEY (cliente_id) REFERENCES clientes(id) NOT VALID"],
+      ["pedidos","pedidos_vendedor_id_fkey","t","FOREIGN KEY (vendedor_id) REFERENCES vendedores(id)"]
+    ]
+  },
+  {
+    "consulta": 6,
+    "colunas": ["tabela","registro_id","coluna","aponta_para"],
+    "linhas": [
+      ["pedidos","10","cliente_id","12"]
+    ]
+  },
+  {
+    "consulta": 7,
+    "colunas": ["pedido_id","status","valor_total","qtd_itens","qtd_pagamentos"],
+    "linhas": [
+      ["10","confirmado","99.90","0","0"]
+    ]
+  }
+]

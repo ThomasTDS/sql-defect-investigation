@@ -1,0 +1,50 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["pedido_id","status_pedido","valor_total","pagamento_id","valor","status_pagamento","data_pagamento"],
+    "linhas": [
+      ["2","entregue","99.90","2","99.90","aprovado","2026-01-13 15:10:00"],
+      ["2","entregue","99.90","11","99.90","aprovado","2026-01-13 15:10:04"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["pedido_id","valor_total","qtd_pagamentos_aprovados","soma_aprovados","excedente"],
+    "linhas": [
+      ["2","99.90","2","199.80","99.90"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["pedido_id","pagamento_id","valor","data_pagamento","pagamento_anterior","valor_anterior","intervalo"],
+    "linhas": [
+      ["2","2","99.90","2026-01-13 15:10:00",null,null,null],
+      ["2","11","99.90","2026-01-13 15:10:04","2","99.90","00:00:04"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["pedido_id","pagamento_original","pagamento_duplicado","valor","data_original","data_duplicado","intervalo","valor_total","soma_aprovados"],
+    "linhas": [
+      ["2","2","11","99.90","2026-01-13 15:10:00","2026-01-13 15:10:04","00:00:04","99.90","199.80"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["column_name","data_type"],
+    "linhas": [
+      ["id","integer"],
+      ["pedido_id","integer"],
+      ["valor","numeric"],
+      ["data_pagamento","timestamp without time zone"],
+      ["status","character varying"]
+    ]
+  },
+  {
+    "consulta": 6,
+    "colunas": ["indexname","indexdef"],
+    "linhas": [
+      ["pagamentos_pkey","CREATE UNIQUE INDEX pagamentos_pkey ON public.pagamentos USING btree (id)"]
+    ]
+  }
+]
