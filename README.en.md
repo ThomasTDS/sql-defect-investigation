@@ -168,6 +168,8 @@ On every push to `main` and on every pull request, GitHub Actions runs two jobs 
 
 The result of each check shows up as a table in the run summary, in the **Actions** tab on GitHub, with no need to open the logs.
 
+Dependencies are kept up to date by **Dependabot** ([`.github/dependabot.yml`](.github/dependabot.yml)): once a month, it opens at most one PR for the npm dependencies and one for the CI actions, and both go through the same CI. Major versions of `embedded-postgres` are excluded, because they set the Postgres version of the local validation, which must stay the same as the one used with Docker.
+
 ---
 
 ## The 5 investigated defects
