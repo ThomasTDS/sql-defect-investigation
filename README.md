@@ -12,6 +12,8 @@ Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de 
 
 Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de usar SQL para **encontrar defeito real** num banco com dados já corrompidos, do jeito que aconteceria investigando um bug relatado em produção.
 
+> **Projeto relacionado:** a continuação é o [sql-performance-investigation](https://github.com/ThomasTDS/sql-performance-investigation), sobre o mesmo CRM/ERP com volume realista de dados. Lá o dado está certo, mas a consulta está lenta, e a evidência vem dos planos de execução (`EXPLAIN ANALYZE`).
+
 > **Nota sobre os dados:** todo o schema e os dados aqui são fictícios, criados especificamente para este projeto de portfólio. Nenhuma informação de empregador atual ou anterior foi usada.
 
 ---
