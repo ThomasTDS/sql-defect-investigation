@@ -12,6 +12,8 @@ This repository simulates a sales CRM/ERP database with real-world data defects 
 
 This is not a SQL syntax exercise. The goal is to show how to use SQL to **find real defects** in a database whose data is already corrupted, the way it would happen while investigating a bug reported in production.
 
+> **Related project:** the follow-up is [sql-performance-investigation](https://github.com/ThomasTDS/sql-performance-investigation), built on the same CRM/ERP with a realistic data volume. There the data is correct but the query is slow, and the evidence comes from execution plans (`EXPLAIN ANALYZE`). Its reports are written in Portuguese.
+
 > **About the data:** the whole schema and all the data are fictional, created specifically for this portfolio project. No information from any current or past employer was used.
 
 > **About the language:** the investigation reports, the SQL comments and the database identifiers (table and column names) are in Portuguese. This README is a full translation of the [Portuguese README](README.md).
