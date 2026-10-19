@@ -54,10 +54,13 @@ const CHECKS = [
     esperadoQuebrado: 3,
   },
   {
+    // 3 na massa quebrada: o pagamento 10 (investigação 04) e os pagamentos
+    // dos pedidos 14 e 15, que parecem anteriores ao pedido por causa do
+    // fuso horário (investigação 09).
     label: 'datas implausíveis (fora da ordem cadastro → pedido → pagamento, ou no futuro)',
     sql: readDeteccao('04-data-invalida'),
     esperadoValido: 0,
-    esperadoQuebrado: 1,
+    esperadoQuebrado: 3,
   },
   {
     label: 'pagamentos aprovados registrados em duplicidade',
@@ -83,6 +86,12 @@ const CHECKS = [
     sql: readDeteccao('08-duplicidade-aproximada'),
     esperadoValido: 0,
     esperadoQuebrado: 1,
+  },
+  {
+    label: 'pedidos gravados em UTC no lugar do horário de Brasília',
+    sql: readDeteccao('09-fuso-horario'),
+    esperadoValido: 0,
+    esperadoQuebrado: 2,
   },
   {
     // 1 na massa quebrada: o pedido 10 tem valor_total e nenhum item.

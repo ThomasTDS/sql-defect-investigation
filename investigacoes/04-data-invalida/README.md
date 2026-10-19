@@ -47,9 +47,9 @@ WHERE pg.status = 'aprovado';
 
 | qtd_pagamentos_aprovados | menor_tempo | maior_tempo | tempo_medio |
 |---|---|---|---|
-| 9 | **-2 days** | 00:10:04 | **-05:13:52.9** |
+| 11 | **-2 days** | 00:10:04 | **-04:48:37.8** |
 
-**Achado:** **H1 descartada.** O banco reproduz o número do painel: o tempo médio passa de -5 horas. O painel está calculando certo, e o problema está nos dados. O `menor_tempo` de **-2 dias** já mostra que existe pelo menos um pagamento aprovado dois dias antes do pedido.
+**Achado:** **H1 descartada.** O banco reproduz o número do painel: o tempo médio é de quase -5 horas. O painel está calculando certo, e o problema está nos dados. O `menor_tempo` de **-2 dias** já mostra que existe pelo menos um pagamento aprovado dois dias antes do pedido.
 
 ### Passo 2: o tempo de cada pagamento
 
@@ -65,6 +65,8 @@ ORDER BY tempo_ate_aprovacao, pg.id;
 | pagamento_id | pedido_id | data_pedido | data_pagamento | tempo_ate_aprovacao |
 |---|---|---|---|---|
 | **10** | **13** | **2026-02-10 10:00:00** | **2026-02-08 10:00:00** | **-2 days** |
+| 12 | 14 | 2026-02-01 01:30:00 | 2026-01-31 22:35:00 | -02:55:00 |
+| 13 | 15 | 2026-02-01 02:10:00 | 2026-01-31 23:15:00 | -02:55:00 |
 | 1 | 1 | 2026-01-11 10:00:00 | 2026-01-11 10:05:00 | 00:05:00 |
 | 5 | 5 | 2026-01-21 10:45:00 | 2026-01-21 10:50:00 | 00:05:00 |
 | 6 | 7 | 2026-01-29 15:30:00 | 2026-01-29 15:35:00 | 00:05:00 |
@@ -74,7 +76,7 @@ ORDER BY tempo_ate_aprovacao, pg.id;
 | 3 | 3 | 2026-01-16 11:30:00 | 2026-01-16 11:40:00 | 00:10:00 |
 | 11 | 2 | 2026-01-13 15:00:00 | 2026-01-13 15:10:04 | 00:10:04 |
 
-**Achado:** **H2 confirmada.** Um único pagamento (`10`) explica todo o desvio. Sem ele, o tempo médio volta para **6min53s**, coerente com o processo. Os outros oito seguem um padrão claro: são aprovados **5 a 10 minutos depois** do pedido.
+**Achado:** **H2 confirmada.** O pagamento `10`, com **-2 dias**, explica quase todo o desvio. Há outros dois negativos, os pagamentos `12` e `13`, com **-2h55** cada. Eles têm outro padrão: o pagamento fica exatamente 3 horas menos 5 minutos antes do pedido, e os pedidos são do app e de madrugada. É um defeito diferente, de fuso horário, investigado à parte na [investigação 09](../09-fuso-horario/README.md). Sem os três, o tempo médio volta para **6min53s**, coerente com o processo. Os outros oito seguem um padrão claro: são aprovados **5 a 10 minutos depois** do pedido.
 
 O pagamento `11` chama atenção por outro motivo: ele é do mesmo pedido `2` que o pagamento `2`, tem o mesmo valor e veio 4 segundos depois. É uma duplicidade, investigada à parte na [investigação 05](../05-pagamento-duplicado/README.md). Como o tempo dele é normal, ele não muda a conclusão desta investigação.
 
@@ -116,8 +118,10 @@ A query completa está em [`deteccao.sql`](deteccao.sql).
 | tabela | registro_id | motivo | data_registro | data_referencia |
 |---|---|---|---|---|
 | pagamentos | 10 | pagamento anterior ao pedido | 2026-02-08 10:00:00 | 2026-02-10 10:00:00 |
+| pagamentos | 12 | pagamento anterior ao pedido | 2026-01-31 22:35:00 | 2026-02-01 01:30:00 |
+| pagamentos | 13 | pagamento anterior ao pedido | 2026-01-31 23:15:00 | 2026-02-01 02:10:00 |
 
-**Achado:** é o único registro com data implausível no banco.
+**Achado:** a detecção encontra 3 registros, mas eles têm duas causas. O pagamento `10` é o caso desta investigação. Os pagamentos `12` e `13` são os do passo 2, com -2h55: pedidos do app gravados em UTC, defeito da [investigação 09](../09-fuso-horario/README.md). Esta detecção diz **que** a data é implausível, e não **por quê**, e o tamanho da diferença é o que separa as causas. Não há outros registros com data implausível no banco.
 
 ### Passo 5: causa raiz — o que o banco registra sobre o lançamento?
 
@@ -164,13 +168,13 @@ Triggers: **nenhuma.**
 
 ## 5. Impacto
 
-- **Indicadores:** o "tempo médio até aprovação" sai negativo (-5h14min no lugar de 6min53s). Qualquer indicador por período também atribui R$ 150,00 ao dia 08/02, quando o pedido nem existia.
+- **Indicadores:** o "tempo médio até aprovação" sai negativo (cerca de -4h49min no lugar de 6min53s, somando o efeito dos pagamentos da investigação 09). Qualquer indicador por período também atribui R$ 150,00 ao dia 08/02, quando o pedido nem existia.
 - **Conciliação:** um cruzamento com o extrato do gateway por data não vai encontrar esse pagamento no dia 08/02, e vai gerar uma divergência falsa nos dois dias.
 - **Cliente:** nenhum, já que o pagamento foi feito e o pedido está correto.
 
 ## 6. Correção proposta
 
-> **Não executada.** O trigger da seção 6.2 foi testado numa cópia descartável do banco. Com a data do pagamento corrigida, ele é criado sem erro e a detecção passa a retornar 0 linhas. Uma nova tentativa de lançar um pagamento datado antes do pedido é bloqueada, e uma com data no futuro também.
+> **Não executada.** O trigger da seção 6.2 foi testado numa cópia descartável do banco. Com a data do pagamento corrigida, ele é criado sem erro e a detecção deixa de listar o pagamento 10. Os pagamentos 12 e 13 só saem com a correção da [investigação 09](../09-fuso-horario/README.md). Uma nova tentativa de lançar um pagamento datado antes do pedido é bloqueada, e uma com data no futuro também.
 
 ### 6.1 Corrigir o registro
 

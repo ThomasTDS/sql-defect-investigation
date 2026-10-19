@@ -8,7 +8,7 @@
 
 ## Description
 
-This repository simulates a sales CRM/ERP database with real-world data defects (duplicate customers, orphaned foreign keys, inconsistent statuses, invalid dates, duplicate payments, fake values in required fields, text with broken encoding and near-duplicates in the catalog) and documents the SQL investigations that find each one of them. It uses the same method applied when investigating production bugs: symptom → hypotheses → queries and evidence → root cause → impact → proposed fix.
+This repository simulates a sales CRM/ERP database with real-world data defects (duplicate customers, orphaned foreign keys, inconsistent statuses, invalid dates, duplicate payments, fake values in required fields, text with broken encoding, near-duplicates in the catalog and mixed time zones in dates) and documents the SQL investigations that find each one of them. It uses the same method applied when investigating production bugs: symptom → hypotheses → queries and evidence → root cause → impact → proposed fix.
 
 This is not a SQL syntax exercise. The goal is to show how to use SQL to **find real defects** in a database whose data is already corrupted, the way it would happen while investigating a bug reported in production.
 
@@ -62,7 +62,7 @@ erDiagram
         int id PK
         int cliente_id FK "NOT VALID in the broken dataset (inv. 02)"
         int vendedor_id FK "optional"
-        timestamp data_pedido
+        timestamp data_pedido "no time zone (inv. 09)"
         varchar status "no CHECK (inv. 03)"
         numeric valor_total "= sum of items (validacoes/)"
     }
@@ -79,12 +79,12 @@ erDiagram
         int id PK "only identifier: no gateway transaction id (inv. 05)"
         int pedido_id FK
         numeric valor
-        timestamp data_pagamento "optional, not validated (inv. 04)"
+        timestamp data_pagamento "optional, not validated (inv. 04), no time zone (inv. 09)"
         varchar status "no CHECK (inv. 03)"
     }
 ```
 
-The **inv. 01** to **inv. 08** notes mark the schema characteristic that is the root cause of each [investigated defect](#the-8-investigated-defects). For example, the missing `UNIQUE` on `email` and `documento` is what allows the duplicate customers of investigation 01.
+The **inv. 01** to **inv. 09** notes mark the schema characteristic that is the root cause of each [investigated defect](#the-9-investigated-defects). For example, the missing `UNIQUE` on `email` and `documento` is what allows the duplicate customers of investigation 01.
 
 ---
 
@@ -106,7 +106,8 @@ sql-defect-investigation/
 │   ├── 05-pagamento-duplicado/    # same structure
 │   ├── 06-dados-de-mentira/       # same structure
 │   ├── 07-codificacao-quebrada/   # same structure
-│   └── 08-duplicidade-aproximada/ # same structure
+│   ├── 08-duplicidade-aproximada/ # same structure
+│   └── 09-fuso-horario/           # same structure
 ├── validacoes/                # value consistency rules (total, payment, catalog)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tables, FKs, constraints
@@ -177,7 +178,7 @@ Dependencies are kept up to date by **Dependabot** ([`.github/dependabot.yml`](.
 
 ---
 
-## The 8 investigated defects
+## The 9 investigated defects
 
 | # | Defect | Simulated real-world scenario | Investigation |
 |---|--------|-------------------------------|---------------|
@@ -189,6 +190,7 @@ Dependencies are kept up to date by **Dependabot** ([`.github/dependabot.yml`](.
 | 6 | Fake values in required fields | In phone sales sign-ups, email and CPF (Brazilian taxpayer ID) are required, and the agent typed filler values when the customer did not provide them | [Report](investigacoes/06-dados-de-mentira/README.md) |
 | 7 | Text with broken encoding (mojibake) | The catalog sync with the ERP read a UTF-8 file as Windows-1252 | [Report](investigacoes/07-codificacao-quebrada/README.md) |
 | 8 | Near-duplicate in the catalog | The sales screen search is exact, did not find the product, and the sales rep created another one with a typo in the name | [Report](investigacoes/08-duplicidade-aproximada/README.md) |
+| 9 | Mixed time zones in dates | The mobile app stores the order date in UTC, while the website and the payment gateway store Brasília time, in a column that does not keep the time zone | [Report](investigacoes/09-fuso-horario/README.md) |
 
 The reports are in Portuguese.
 
@@ -204,6 +206,7 @@ The reports are in Portuguese.
 | 6 | Three sign-ups rejected by the credit check: two with the email `naotem@naotem.com` ("don't have one") and fake CPFs (which **pass** the check-digit test), and one with two CPF digits swapped | `NOT NULL` only ensures the field is not empty: nothing validates its content, and the form offers no "not provided" option |
 | 7 | Products named like "MÃ³dulo de RelatÃ³rios" in the emails of 5 orders, while "Plano Básico Mensal" is still correct: the defect is in the data, not in how it is displayed | The ERP sync reads the UTF-8 file as Windows-1252; the reverse operation restores the original text exactly, which proves the diagnosis |
 | 8 | "Consultoria Avulsa (hora)" and "Consutoria avulsa - hora" are the same service, with its sales split between the two. No exact comparison links them, but text similarity (`pg_trgm`) gives 0.808, and the extension's default threshold (0.3) would flag legitimate plans as duplicates | `produtos.nome` has no uniqueness constraint, and the exact search on the sales screen pushes the rep into creating the product again |
+| 9 | Two orders placed through the app at 10:30 and 11:10 pm on Jan 31 show up in February, with the payment 2h55 "before" the order. Removing the 3-hour offset puts the payment back in the normal pattern (5 minutes later). January is R$ 149.80 below the real figure | The date columns are `timestamp without time zone` and do not keep the time zone, so UTC and Brasília time mix without the database noticing |
 
 Each report ends with a proposed fix, tested on a disposable copy of the database but **not applied**: as in a real investigation, QA delivers evidence and a recommendation, and the decision to change the data belongs to the responsible team.
 
@@ -221,7 +224,7 @@ Change the folder to run the other investigations.
 
 Each defect is implemented and commented in `sql/03_seed_quebrado.sql`. Each investigation lives in `investigacoes/`, with a full report and the detection query (`deteccao.sql`), which the CI runs against both datasets. That way, what is documented is exactly what is tested.
 
-Besides the 8 defects, the validation also checks value consistency rules (order total = sum of its items, approved payments = order total, and item price equal to the catalog price in the control dataset). The rules, and the reason for each one, are in [`validacoes/`](validacoes/README.md) (in Portuguese).
+Besides the 9 defects, the validation also checks value consistency rules (order total = sum of its items, approved payments = order total, and item price equal to the catalog price in the control dataset). The rules, and the reason for each one, are in [`validacoes/`](validacoes/README.md) (in Portuguese).
 
 ### When the data changes
 

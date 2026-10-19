@@ -17,7 +17,7 @@ Arquivos desta investigação:
 
 ## 1. Sintoma relatado
 
-> Chamado do financeiro: o relatório "Vendas por cliente" fecha em **R$ 2.069,00**, mas o total de pedidos registrados no sistema é **R$ 2.168,90**. A diferença é de **R$ 99,90**.
+> Chamado do financeiro: o relatório "Vendas por cliente" fecha em **R$ 2.218,80**, mas o total de pedidos registrados no sistema é **R$ 2.318,70**. A diferença é de **R$ 99,90**.
 
 Dois relatórios que deveriam somar a mesma coisa e não batem. Antes de olhar dado, a primeira pergunta é: o que um relatório faz que o outro não faz?
 
@@ -46,7 +46,7 @@ SELECT
 
 | qtd_pedidos_tabela | total_tabela | qtd_pedidos_relatorio | total_relatorio |
 |---|---|---|---|
-| 13 | 2168.90 | 12 | 2069.00 |
+| 15 | 2318.70 | 14 | 2218.80 |
 
 **Achado:** **H1 descartada.** Sem nenhum filtro, a divergência continua: o `JOIN` sozinho faz **1 pedido** e **R$ 99,90** sumirem. Um `JOIN` comum (`INNER JOIN`) só devolve as linhas que encontram correspondência dos dois lados, então algum pedido não tem cliente.
 
@@ -169,7 +169,7 @@ O banco não tem trilha de auditoria. Por isso, não é possível saber **quem**
 
 ## 6. Correção proposta
 
-> **Não executada.** Fica como recomendação. O caminho B, seguido do `VALIDATE`, foi testado numa cópia descartável do banco: depois dele, a FK fica `validada = true`, a detecção retorna 0 órfãos e os dois totais do chamado passam a bater (R$ 2.168,90 nos dois).
+> **Não executada.** Fica como recomendação. O caminho B, seguido do `VALIDATE`, foi testado numa cópia descartável do banco: depois dele, a FK fica `validada = true`, a detecção retorna 0 órfãos e os dois totais do chamado passam a bater (R$ 2.318,70 nos dois).
 
 ### 6.1 Tratar o pedido órfão: decisão do negócio
 

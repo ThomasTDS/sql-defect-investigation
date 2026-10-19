@@ -46,10 +46,10 @@ ORDER BY receita DESC, pr.id;
 | 3 | Plano Enterprise Mensal | 2 | 499.80 |
 | **5** | **Consultoria Avulsa (hora)** | 2 | **300.00** |
 | 6 | MÃ³dulo de RelatÃ³rios | 3 | 239.70 |
+| 2 | Plano Profissional Mensal | 2 | 199.80 |
 | **9** | **Consutoria avulsa - hora** | 1 | **150.00** |
+| 1 | Plano Básico Mensal | 3 | 149.70 |
 | 7 | MÃ³dulo de IntegraÃ§Ãµes | 1 | 119.90 |
-| 2 | Plano Profissional Mensal | 1 | 99.90 |
-| 1 | Plano Básico Mensal | 2 | 99.80 |
 | 8 | Suporte PrioritÃ¡rio | 1 | 59.90 |
 
 **Achado:** o produto `9` tem o **mesmo preço** do `5` (R$ 150,00 por hora) e um nome quase igual, com um erro de digitação ("Consutoria"). Tudo indica que é o mesmo serviço, o que **descarta H1**. A confirmação final é do time comercial, mas um serviço diferente teria outro nome, e não o mesmo nome escrito errado. Os nomes quebrados ("MÃ³dulo"...) são outro defeito, da [investigação 07](../07-codificacao-quebrada/README.md).

@@ -1,0 +1,59 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["pedido_id","data_pedido","data_pagamento","mes_do_pedido","mes_do_pagamento","valor_total"],
+    "linhas": [
+      ["14","2026-02-01 01:30:00","2026-01-31 22:35:00","2026-02","2026-01","99.90"],
+      ["15","2026-02-01 02:10:00","2026-01-31 23:15:00","2026-02","2026-01","49.90"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["pedido_id","cliente","vendedor_id","data_pedido","status","valor_total"],
+    "linhas": [
+      ["14","Gabriela Dias Ramos",null,"2026-02-01 01:30:00","entregue","99.90"],
+      ["15","Diego Alves Pereira",null,"2026-02-01 02:10:00","confirmado","49.90"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["pedidos_entre_8h_e_20h","pedidos_fora_desse_horario","quais"],
+    "linhas": [
+      ["13","2","14, 15"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["pedido_id","diferenca_gravada","diferenca_corrigida"],
+    "linhas": [
+      ["13","-2 days","-1 days -21:00:00"],
+      ["14","-02:55:00","00:05:00"],
+      ["15","-02:55:00","00:05:00"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["pedido_id","data_pedido_gravada","data_pagamento","diferenca_gravada","data_pedido_em_brasilia","diferenca_corrigida"],
+    "linhas": [
+      ["14","2026-02-01 01:30:00","2026-01-31 22:35:00","-02:55:00","2026-01-31 22:30:00","00:05:00"],
+      ["15","2026-02-01 02:10:00","2026-01-31 23:15:00","-02:55:00","2026-01-31 23:10:00","00:05:00"]
+    ]
+  },
+  {
+    "consulta": 6,
+    "colunas": ["table_name","column_name","data_type"],
+    "linhas": [
+      ["clientes","data_cadastro","timestamp without time zone"],
+      ["pagamentos","data_pagamento","timestamp without time zone"],
+      ["pedidos","data_pedido","timestamp without time zone"]
+    ]
+  },
+  {
+    "consulta": 7,
+    "colunas": ["mes","vendas_como_estao","vendas_corrigidas"],
+    "linhas": [
+      ["2026-01","1439.20","1589.00"],
+      ["2026-02","779.60","629.80"]
+    ]
+  }
+]

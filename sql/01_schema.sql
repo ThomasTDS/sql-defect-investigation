@@ -3,7 +3,7 @@
 -- bastante pra sustentar os tipos de defeito investigados neste projeto
 -- (duplicidade, FK órfã, status inconsistente, data inválida, pagamento em
 -- duplicidade, valores de mentira em campos obrigatórios, texto com
--- codificação quebrada, duplicidade aproximada).
+-- codificação quebrada, duplicidade aproximada, fuso horário misturado).
 
 -- Similaridade de texto por trigramas, usada para achar nomes parecidos
 -- (investigação 08). Vem com o PostgreSQL (módulo contrib).

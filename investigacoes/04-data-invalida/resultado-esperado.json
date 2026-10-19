@@ -3,7 +3,7 @@
     "consulta": 1,
     "colunas": ["qtd_pagamentos_aprovados","menor_tempo","maior_tempo","tempo_medio"],
     "linhas": [
-      ["9","-2 days","00:10:04","-05:13:52.888889"]
+      ["11","-2 days","00:10:04","-04:48:37.818182"]
     ]
   },
   {
@@ -11,6 +11,8 @@
     "colunas": ["pagamento_id","pedido_id","data_pedido","data_pagamento","tempo_ate_aprovacao"],
     "linhas": [
       ["10","13","2026-02-10 10:00:00","2026-02-08 10:00:00","-2 days"],
+      ["12","14","2026-02-01 01:30:00","2026-01-31 22:35:00","-02:55:00"],
+      ["13","15","2026-02-01 02:10:00","2026-01-31 23:15:00","-02:55:00"],
       ["1","1","2026-01-11 10:00:00","2026-01-11 10:05:00","00:05:00"],
       ["5","5","2026-01-21 10:45:00","2026-01-21 10:50:00","00:05:00"],
       ["6","7","2026-01-29 15:30:00","2026-01-29 15:35:00","00:05:00"],
@@ -32,7 +34,9 @@
     "consulta": 4,
     "colunas": ["tabela","registro_id","motivo","data_registro","data_referencia"],
     "linhas": [
-      ["pagamentos","10","pagamento anterior ao pedido","2026-02-08 10:00:00","2026-02-10 10:00:00"]
+      ["pagamentos","10","pagamento anterior ao pedido","2026-02-08 10:00:00","2026-02-10 10:00:00"],
+      ["pagamentos","12","pagamento anterior ao pedido","2026-01-31 22:35:00","2026-02-01 01:30:00"],
+      ["pagamentos","13","pagamento anterior ao pedido","2026-01-31 23:15:00","2026-02-01 02:10:00"]
     ]
   },
   {

@@ -1,4 +1,4 @@
--- Introduz, de propósito, os 8 tipos de defeito investigados neste projeto.
+-- Introduz, de propósito, os 9 tipos de defeito investigados neste projeto.
 -- Cada bloco está comentado com o cenário real que ele simula. Execute
 -- depois de 01_schema.sql + 02_seed_valido.sql.
 
@@ -135,3 +135,30 @@ VALUES ('Consutoria avulsa - hora', 150.00, 'Serviço');
 
 UPDATE itens_pedido SET produto_id = currval('produtos_id_seq') WHERE pedido_id = 13;
 -- A consultoria do pedido 13 foi lançada no produto duplicado.
+
+-- =====================================================================
+-- DEFEITO 9: Fuso horário misturado na mesma coluna
+-- Cenário real: o site grava datas no horário de Brasília (UTC-3), mas o
+-- app de celular, lançado em janeiro, grava data_pedido em UTC. A coluna
+-- é "timestamp without time zone", então o banco não sabe de que fuso é
+-- cada valor. O gateway de pagamento continua gravando em hora local.
+-- Dois pedidos feitos pelo app na noite de 31/01 (22:30 e 23:10 em
+-- Brasília) ficaram gravados como 01/02 (01:30 e 02:10, em UTC). Pedido
+-- pelo app não passa por vendedor, por isso vendedor_id fica vazio.
+-- =====================================================================
+INSERT INTO pedidos (cliente_id, vendedor_id, data_pedido, status, valor_total)
+VALUES (7, NULL, '2026-02-01 01:30:00', 'entregue', 99.90);
+INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
+VALUES (currval('pedidos_id_seq'), 2, 1, 99.90);
+INSERT INTO pagamentos (pedido_id, valor, data_pagamento, status)
+VALUES (currval('pedidos_id_seq'), 99.90, '2026-01-31 22:35:00', 'aprovado');
+
+INSERT INTO pedidos (cliente_id, vendedor_id, data_pedido, status, valor_total)
+VALUES (4, NULL, '2026-02-01 02:10:00', 'confirmado', 49.90);
+INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
+VALUES (currval('pedidos_id_seq'), 1, 1, 49.90);
+INSERT INTO pagamentos (pedido_id, valor, data_pagamento, status)
+VALUES (currval('pedidos_id_seq'), 49.90, '2026-01-31 23:15:00', 'aprovado');
+-- Nos dois, o pagamento (hora local) parece ter acontecido 2h55 ANTES do
+-- pedido (UTC): são as 3 horas do fuso menos os 5 minutos normais de
+-- aprovação.
