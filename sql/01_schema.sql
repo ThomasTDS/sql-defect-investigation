@@ -3,7 +3,11 @@
 -- bastante pra sustentar os tipos de defeito investigados neste projeto
 -- (duplicidade, FK órfã, status inconsistente, data inválida, pagamento em
 -- duplicidade, valores de mentira em campos obrigatórios, texto com
--- codificação quebrada).
+-- codificação quebrada, duplicidade aproximada).
+
+-- Similaridade de texto por trigramas, usada para achar nomes parecidos
+-- (investigação 08). Vem com o PostgreSQL (módulo contrib).
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE clientes (
     id SERIAL PRIMARY KEY,

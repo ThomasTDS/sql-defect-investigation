@@ -79,6 +79,12 @@ const CHECKS = [
     esperadoQuebrado: 5,
   },
   {
+    label: 'produtos com nome muito parecido (provável duplicidade)',
+    sql: readDeteccao('08-duplicidade-aproximada'),
+    esperadoValido: 0,
+    esperadoQuebrado: 1,
+  },
+  {
     // 1 na massa quebrada: o pedido 10 tem valor_total e nenhum item.
     label: 'pedidos com total diferente da soma dos itens',
     sql: readValidacao('total-pedido-igual-soma-itens.sql'),
