@@ -1,4 +1,4 @@
--- Introduz, de propósito, os 6 tipos de defeito investigados neste projeto.
+-- Introduz, de propósito, os 7 tipos de defeito investigados neste projeto.
 -- Cada bloco está comentado com o cenário real que ele simula. Execute
 -- depois de 01_schema.sql + 02_seed_valido.sql.
 
@@ -101,3 +101,23 @@ INSERT INTO clientes (nome, email, documento, telefone, data_cadastro, status) V
 -- os dois CPFs passam no cálculo do dígito verificador. O CPF do Paulo é
 -- real, mas foi digitado com os dois últimos números trocados (o certo
 -- seria 14725836982), e o dígito verificador não fecha.
+
+-- =====================================================================
+-- DEFEITO 7: Texto com codificação quebrada (mojibake)
+-- Cenário real: a sincronização semanal do catálogo com o ERP recebe um
+-- arquivo em UTF-8, mas o importador o lê como Windows-1252 (o padrão do
+-- servidor onde ele roda). Cada letra acentuada, que em UTF-8 ocupa 2
+-- bytes, vira 2 caracteres: "ó" vira "Ã³", "ç" vira "Ã§". Só os produtos
+-- alterados no ERP naquela semana foram regravados.
+-- O UPDATE abaixo reproduz exatamente esse erro: pega os bytes UTF-8 do
+-- texto e os interpreta como Windows-1252.
+-- =====================================================================
+UPDATE produtos
+SET nome = convert_from(convert_to(nome, 'UTF8'), 'WIN1252')
+WHERE id IN (6, 7, 8);
+-- Módulo de Relatórios, Módulo de Integrações e Suporte Prioritário.
+
+UPDATE produtos
+SET categoria = convert_from(convert_to(categoria, 'UTF8'), 'WIN1252')
+WHERE id IN (4, 5);
+-- Categoria "Serviço" do Pacote de Onboarding e da Consultoria Avulsa.

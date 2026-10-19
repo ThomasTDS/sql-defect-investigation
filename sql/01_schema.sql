@@ -2,7 +2,8 @@
 -- pedidos e pagamentos. Modelo propositalmente simples, mas realista o
 -- bastante pra sustentar os tipos de defeito investigados neste projeto
 -- (duplicidade, FK órfã, status inconsistente, data inválida, pagamento em
--- duplicidade, valores de mentira em campos obrigatórios).
+-- duplicidade, valores de mentira em campos obrigatórios, texto com
+-- codificação quebrada).
 
 CREATE TABLE clientes (
     id SERIAL PRIMARY KEY,
