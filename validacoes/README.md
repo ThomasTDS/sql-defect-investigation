@@ -1,6 +1,6 @@
 # Validações de consistência de valores
 
-Regras sobre os **valores** de pedidos, itens e pagamentos que não fazem parte dos 5 defeitos investigados, mas que o `npm run validate` confere a cada execução (e a CI, a cada pull request). Cada arquivo é uma query que lista os registros que quebram a regra.
+Regras sobre os **valores** de pedidos, itens e pagamentos que não fazem parte dos 6 defeitos investigados, mas que o `npm run validate` confere a cada execução (e a CI, a cada pull request). Cada arquivo é uma query que lista os registros que quebram a regra.
 
 | Arquivo | Regra | Massa válida | Massa quebrada |
 |---|---|---|---|

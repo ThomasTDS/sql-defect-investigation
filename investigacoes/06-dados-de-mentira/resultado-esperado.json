@@ -1,0 +1,66 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["id","nome","email","documento","telefone","data_cadastro"],
+    "linhas": [
+      ["9","Isabela Rocha Barbosa","isabela.barbosa@example.com","99900011112","51900001111","2026-02-02 12:30:00"],
+      ["10","João Pedro Azevedo","joao.azevedo@example.com","00011122285","51999990000","2026-02-05 08:40:00"],
+      ["13","Roberto Lima Santos","naotem@naotem.com","00000000000","11987654321","2026-02-12 10:30:00"],
+      ["14","Sandra Melo Prado","naotem@naotem.com","12345678909","21976543210","2026-02-12 14:05:00"],
+      ["15","Paulo Henrique Dias","paulo.dias@example.com","14725836928","31965432109","2026-02-13 09:40:00"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["campo","valor","qtd_clientes","clientes"],
+    "linhas": [
+      ["documento","11122233396","2","1, 11"],
+      ["email","ana.ferreira@example.com","2","1, 11"],
+      ["email","naotem@naotem.com","2","13, 14"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["id","nome","cpf","dv_informado","dv_calculado","dv_confere"],
+    "linhas": [
+      ["1","Ana Carolina Ferreira","11122233396","96","96","t"],
+      ["2","Bruno Costa Lima","22233344405","05","05","t"],
+      ["3","Carla Mendes Souza","33344455508","08","08","t"],
+      ["4","Diego Alves Pereira","44455566619","19","19","t"],
+      ["5","Elisa Martins Rocha","55566677720","20","20","t"],
+      ["6","Fábio Nunes Castro","66677788830","30","30","t"],
+      ["7","Gabriela Dias Ramos","77788899941","41","41","t"],
+      ["8","Henrique Lopes Teixeira","88899900078","78","78","t"],
+      ["9","Isabela Rocha Barbosa","99900011112","12","12","t"],
+      ["10","João Pedro Azevedo","00011122285","85","85","t"],
+      ["11","Ana C. Ferreira","11122233396","96","96","t"],
+      ["13","Roberto Lima Santos","00000000000","00","00","t"],
+      ["14","Sandra Melo Prado","12345678909","09","09","t"],
+      ["15","Paulo Henrique Dias","14725836928","28","82","f"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["cliente_id","nome","email","documento","problemas"],
+    "linhas": [
+      ["13","Roberto Lima Santos","naotem@naotem.com","00000000000","e-mail de mentira; CPF com todos os dígitos iguais"],
+      ["14","Sandra Melo Prado","naotem@naotem.com","12345678909","e-mail de mentira; CPF de sequência conhecida"],
+      ["15","Paulo Henrique Dias","paulo.dias@example.com","14725836928","CPF com dígito verificador errado"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["column_name","data_type","is_nullable"],
+    "linhas": [
+      ["documento","character varying","NO"],
+      ["email","character varying","NO"]
+    ]
+  },
+  {
+    "consulta": 6,
+    "colunas": ["conname","contype","definicao"],
+    "linhas": [
+      ["clientes_pkey","p","PRIMARY KEY (id)"]
+    ]
+  }
+]

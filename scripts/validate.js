@@ -66,6 +66,12 @@ const CHECKS = [
     esperadoQuebrado: 1,
   },
   {
+    label: 'clientes com e-mail ou CPF de mentira ou inválido',
+    sql: readDeteccao('06-dados-de-mentira'),
+    esperadoValido: 0,
+    esperadoQuebrado: 3,
+  },
+  {
     // 1 na massa quebrada: o pedido 10 tem valor_total e nenhum item.
     label: 'pedidos com total diferente da soma dos itens',
     sql: readValidacao('total-pedido-igual-soma-itens.sql'),

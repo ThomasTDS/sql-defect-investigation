@@ -45,8 +45,8 @@ ORDER BY id;
 
 | id | nome | email | documento | telefone | data_cadastro | status |
 |---|---|---|---|---|---|---|
-| 1 | Ana Carolina Ferreira | ana.ferreira@example.com | 11122233344 | 11988887777 | 2026-01-10 09:15:00 | ativo |
-| 11 | Ana C. Ferreira | ana.ferreira@example.com | 11122233344 | 11988887777 | 2026-01-10 09:17:32 | ativo |
+| 1 | Ana Carolina Ferreira | ana.ferreira@example.com | 11122233396 | 11988887777 | 2026-01-10 09:15:00 | ativo |
+| 11 | Ana C. Ferreira | ana.ferreira@example.com | 11122233396 | 11988887777 | 2026-01-10 09:17:32 | ativo |
 
 **Achado:** **H1 confirmada.** São dois registros com o mesmo e-mail, documento e telefone.
 
@@ -59,29 +59,33 @@ Os detalhes do par também separam H2 de H3:
 
 ### Passo 2: o caso é isolado?
 
-Para varrer a base toda, a busca é generalizada para comparar todos os clientes entre si, aos pares. Dois cuidados nessa query:
+Para varrer a base toda, a busca é generalizada para comparar todos os clientes entre si, aos pares. Três cuidados nessa query:
 
-- **Normalização:** o e-mail é comparado em minúsculas e sem espaços nas pontas, e o documento só pelos dígitos. Assim, cadastros como `Ana.Ferreira@Example.com` ou `111.222.333-44` também seriam pegos.
+- **Normalização:** o e-mail é comparado em minúsculas e sem espaços nas pontas, e o documento só pelos dígitos. Assim, cadastros como `Ana.Ferreira@Example.com` ou `111.222.333-96` também seriam pegos.
 - **Cada par conta uma vez só:** a condição `a.id < b.id` evita que o mesmo par apareça duas vezes, uma como (1, 11) e outra como (11, 1). Ela também evita que um registro seja comparado com ele mesmo.
+- **Valores de mentira não identificam ninguém:** na primeira versão da query, os clientes `13` e `14` (Roberto e Sandra) também apareciam como par, porque os dois têm o e-mail `naotem@naotem.com`. São pessoas diferentes, com CPFs diferentes, e o e-mail é um valor de preenchimento que o atendente digitou para conseguir salvar o cadastro. Esses valores viram `NULL` antes da comparação e nunca formam par. Eles são o tema da [investigação 06](../06-dados-de-mentira/README.md).
 
 ```sql
+WITH identificadores AS (
+    SELECT id, nome, data_cadastro,
+           CASE WHEN <e-mail de mentira> THEN NULL ELSE lower(trim(email)) END AS email,
+           CASE WHEN <CPF de mentira> THEN NULL ELSE regexp_replace(documento, '\D', '', 'g') END AS documento
+    FROM clientes
+)
 SELECT a.id AS id_original, b.id AS id_duplicado, ...
-FROM clientes a
-JOIN clientes b
+FROM identificadores a
+JOIN identificadores b
     ON a.id < b.id
-   AND (
-        lower(trim(a.email)) = lower(trim(b.email))
-        OR regexp_replace(a.documento, '\D', '', 'g') = regexp_replace(b.documento, '\D', '', 'g')
-   );
+   AND (a.email = b.email OR a.documento = b.documento);
 ```
 
-A query completa está em [`deteccao.sql`](deteccao.sql).
+A query completa, com as listas de valores de mentira, está em [`deteccao.sql`](deteccao.sql).
 
 | id_original | id_duplicado | nome_original | nome_duplicado | mesmo_email | mesmo_documento | intervalo |
 |---|---|---|---|---|---|---|
 | 1 | 11 | Ana Carolina Ferreira | Ana C. Ferreira | true | true | 00:02:32 |
 
-**Achado:** **H4 descartada.** Hoje existe só esse par duplicado na base. Mesmo assim, a causa (passo 4) permite que o defeito se repita a qualquer momento.
+**Achado:** **H4 descartada.** Descontado o falso positivo do e-mail de mentira, existe só esse par duplicado na base. Mesmo assim, a causa (passo 4) permite que o defeito se repita a qualquer momento.
 
 ### Passo 3: impacto — qual registro tem histórico?
 
@@ -146,7 +150,7 @@ Corrigir só a aplicação não basta. Qualquer outro caminho de escrita (import
 
 ## 6. Correção proposta
 
-> **Não executada.** Fica como recomendação para o time de desenvolvimento. O script foi testado numa cópia descartável do banco: depois dele, a detecção retorna 0 pares, o pedido da cliente continua vinculado ao registro `1`, e uma nova tentativa de cadastro com `' Ana.Ferreira@Example.com'` e `'111.222.333-44'` é bloqueada pelo banco.
+> **Não executada.** Fica como recomendação para o time de desenvolvimento. O script foi testado numa cópia descartável do banco: depois dele, a detecção retorna 0 pares, o pedido da cliente continua vinculado ao registro `1`, e uma nova tentativa de cadastro com `' Ana.Ferreira@Example.com'` e `'111.222.333-96'` é bloqueada pelo banco. Os índices da seção 6.2 só podem ser criados depois da correção da [investigação 06](../06-dados-de-mentira/README.md) (ver "Ordem" abaixo).
 
 ### 6.1 Limpeza dos dados
 
@@ -180,6 +184,7 @@ São índices únicos sobre **expressões** (e-mail normalizado, documento só c
 Pontos de atenção para aplicar em produção:
 
 - **Ordem:** a limpeza (6.1) precisa vir antes. Se ainda houver qualquer duplicado na base, o `CREATE UNIQUE INDEX` falha. Rode o [`deteccao.sql`](deteccao.sql) antes e confirme que ele retorna zero linhas.
+- **Valores de mentira também barram o índice:** o índice único olha o valor cru, e não a lista de valores de mentira da detecção. Com os clientes `13` e `14` compartilhando `naotem@naotem.com`, o `CREATE UNIQUE INDEX` no e-mail **falha**, mesmo com a detecção zerada. A correção da [investigação 06](../06-dados-de-mentira/README.md), que troca esses valores por `NULL`, precisa ser aplicada antes. O índice único aceita vários `NULL`.
 - **Bloqueio:** num banco grande, o `CREATE UNIQUE INDEX` comum bloqueia escritas na tabela enquanto o índice é construído. Em produção, use `CREATE UNIQUE INDEX CONCURRENTLY`, que não bloqueia, mas não pode rodar dentro de uma transação.
 
 ### 6.3 Prevenção na aplicação

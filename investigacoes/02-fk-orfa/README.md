@@ -85,13 +85,13 @@ WHERE c.id IS NULL;
 
 | ultimo_id_gerado | maior_id_existente | qtd_clientes |
 |---|---|---|
-| 12 | 11 | 11 |
+| 15 | 15 | 14 |
 
 | id_gerado_e_ausente |
 |---|
 | 12 |
 
-**Achado:** **H3 descartada.** O id 12 foi gerado pela sequence e é o único id ausente. Sozinha, uma lacuna na sequence não prova uma remoção, porque um `INSERT` que sofreu rollback também consome um id. Mas aqui existe um pedido apontando justamente para esse id, o que só faz sentido se o cliente existiu de fato. **Conclusão: o cliente 12 foi cadastrado e depois removido.**
+**Achado:** **H3 descartada.** A sequence já gerou 15 ids, mas só existem 14 clientes: falta exatamente um. A segunda query mostra qual é: o id 12, o único gerado e ausente. Os ids 13 a 15 são clientes cadastrados depois, os três da [investigação 06](../06-dados-de-mentira/README.md). Sozinha, uma lacuna na sequence não prova uma remoção, porque um `INSERT` que sofreu rollback também consome um id. Mas aqui existe um pedido apontando justamente para esse id, o que só faz sentido se o cliente existiu de fato. **Conclusão: o cliente 12 foi cadastrado e depois removido.**
 
 ### Passo 4: como o banco permitiu?
 
