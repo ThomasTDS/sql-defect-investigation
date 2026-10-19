@@ -25,8 +25,10 @@ FROM produtos
 WHERE id IN (5, 9)
 ORDER BY id;
 
--- Passo 3: similaridade entre todos os pares de produtos, da maior para a
--- menor (as 6 maiores).
+-- Passo 3: pares de produtos que o limite padrão da extensão (0,3)
+-- consideraria parecidos, da maior para a menor similaridade.
+-- (Abaixo de 0,3, o valor de pares com caracteres acentuados ou quebrados
+-- varia com o locale do banco; ver o relatório.)
 SELECT
     a.id AS produto_a,
     b.id AS produto_b,
@@ -35,8 +37,8 @@ SELECT
     round(similarity(a.nome, b.nome)::numeric, 3) AS similaridade
 FROM produtos a
 JOIN produtos b ON a.id < b.id
-ORDER BY similarity(a.nome, b.nome) DESC, a.id, b.id
-LIMIT 6;
+WHERE similarity(a.nome, b.nome) >= 0.3
+ORDER BY similarity(a.nome, b.nome) DESC, a.id, b.id;
 
 -- Passo 4: detecção final (mesma query de deteccao.sql).
 SELECT

@@ -76,15 +76,15 @@ WHERE id IN (5, 9);
 
 ### Passo 3: similaridade entre todos os pares
 
-Para achar nomes **parecidos**, a extensão `pg_trgm` do PostgreSQL quebra cada nome em sequências de 3 letras (trigramas) e mede a fração em comum: 0 é nada em comum, 1 é igual. Ela já ignora maiúsculas e pontuação, e um erro de digitação só afeta alguns trigramas. Para todos os pares de produtos:
+Para achar nomes **parecidos**, a extensão `pg_trgm` do PostgreSQL quebra cada nome em sequências de 3 letras (trigramas) e mede a fração em comum: 0 é nada em comum, 1 é igual. Ela já ignora maiúsculas e pontuação, e um erro de digitação só afeta alguns trigramas. A extensão tem um limite padrão (o do operador `%`) de **0.3**: pares acima dele são considerados parecidos. Os pares de produtos acima desse limite:
 
 ```sql
 SELECT a.id AS produto_a, b.id AS produto_b, a.nome AS nome_a, b.nome AS nome_b,
        round(similarity(a.nome, b.nome)::numeric, 3) AS similaridade
 FROM produtos a
 JOIN produtos b ON a.id < b.id
-ORDER BY similarity(a.nome, b.nome) DESC
-LIMIT 6;
+WHERE similarity(a.nome, b.nome) >= 0.3
+ORDER BY similarity(a.nome, b.nome) DESC;
 ```
 
 | produto_a | produto_b | nome_a | nome_b | similaridade |
@@ -93,14 +93,13 @@ LIMIT 6;
 | 1 | 2 | Plano Básico Mensal | Plano Profissional Mensal | 0.419 |
 | 1 | 3 | Plano Básico Mensal | Plano Enterprise Mensal | 0.419 |
 | 2 | 3 | Plano Profissional Mensal | Plano Enterprise Mensal | 0.371 |
-| 6 | 7 | MÃ³dulo de RelatÃ³rios | MÃ³dulo de IntegraÃ§Ãµes | 0.297 |
-| 4 | 6 | Pacote de Onboarding | MÃ³dulo de RelatÃ³rios | 0.073 |
 
 **Achados:**
 
 - **H2 confirmada:** o par `5` e `9` tem similaridade **0.808**, muito acima de todos os outros.
-- **A escolha do limite importa.** Os três planos ("Plano Básico Mensal", "Plano Profissional Mensal", "Plano Enterprise Mensal") são produtos **legítimos e diferentes**, mas compartilham "Plano" e "Mensal" e chegam a **0.419**. O limite padrão da `pg_trgm` (o operador `%`) é **0.3**, e com ele os três pares de planos seriam marcados como duplicados: três falsos positivos para um caso real.
+- **A escolha do limite importa.** Os três planos ("Plano Básico Mensal", "Plano Profissional Mensal", "Plano Enterprise Mensal") são produtos **legítimos e diferentes**, mas compartilham "Plano" e "Mensal" e chegam a **0.419**. Com o limite padrão de 0.3, os três pares de planos seriam marcados como duplicados: três falsos positivos para um caso real.
 - **O limite foi definido pelos dados:** 0.6 fica no meio do intervalo entre o maior par legítimo (0.419) e o duplicado (0.808). Num catálogo maior, esse intervalo pode ser menor, e o resultado da detecção deve ser tratado como **lista de suspeitos para revisão**, e não como certeza.
+- **A similaridade depende do locale do banco.** A `pg_trgm` decide o que conta como "letra" a partir do locale do banco, e isso muda o resultado para caracteres fora do ASCII. O par "MÃ³dulo de RelatÃ³rios" × "MÃ³dulo de IntegraÃ§Ãµes" (texto quebrado da investigação 07) dá **0.297** num banco com locale português (Windows) e **0.286** num banco Linux. O teste de regressão dos relatórios pegou essa diferença na primeira execução da CI. Os valores que sustentam a conclusão (0.808, 0.419 e 0.371) são **iguais** nos dois ambientes, e o par divergente fica abaixo do limite padrão, fora da tabela. Na prática, um limite escolhido num ambiente deve ser validado no ambiente onde a detecção vai rodar, principalmente com nomes acentuados.
 
 ### Passo 4: a detecção final — é isolado?
 
