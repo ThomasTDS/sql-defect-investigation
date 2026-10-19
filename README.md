@@ -8,7 +8,7 @@
 
 ## Descrição
 
-Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de dados reais — clientes duplicados, foreign keys órfãs, status inconsistentes, datas inválidas, pagamentos em duplicidade e valores de mentira em campos obrigatórios — e documenta as investigações SQL que encontram cada um deles, com a mesma metodologia usada em investigação de bugs de produção: sintoma → hipóteses → queries e evidências → causa raiz → impacto → correção proposta.
+Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de dados reais — clientes duplicados, foreign keys órfãs, status inconsistentes, datas inválidas, pagamentos em duplicidade, valores de mentira em campos obrigatórios e texto com codificação quebrada — e documenta as investigações SQL que encontram cada um deles, com a mesma metodologia usada em investigação de bugs de produção: sintoma → hipóteses → queries e evidências → causa raiz → impacto → correção proposta.
 
 Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de usar SQL para **encontrar defeito real** num banco com dados já corrompidos, do jeito que aconteceria investigando um bug relatado em produção.
 
@@ -49,9 +49,9 @@ erDiagram
 
     produtos {
         int id PK
-        varchar nome
+        varchar nome "texto sem validação (inv. 07)"
         numeric preco "CHECK >= 0"
-        varchar categoria "opcional"
+        varchar categoria "opcional, texto sem validação (inv. 07)"
     }
 
     pedidos {
@@ -80,7 +80,7 @@ erDiagram
     }
 ```
 
-As anotações **inv. 01** a **inv. 06** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-6-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
+As anotações **inv. 01** a **inv. 07** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-7-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
 
 ---
 
@@ -100,7 +100,8 @@ sql-defect-investigation/
 │   ├── 03-status-inconsistente/   # mesma estrutura
 │   ├── 04-data-invalida/          # mesma estrutura
 │   ├── 05-pagamento-duplicado/    # mesma estrutura
-│   └── 06-dados-de-mentira/       # mesma estrutura
+│   ├── 06-dados-de-mentira/       # mesma estrutura
+│   └── 07-codificacao-quebrada/   # mesma estrutura
 ├── validacoes/                # regras de consistência de valores (total, pagamento, catálogo)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
@@ -171,7 +172,7 @@ As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.
 
 ---
 
-## Os 6 defeitos investigados
+## Os 7 defeitos investigados
 
 | # | Defeito | Cenário real simulado | Investigação |
 |---|---------|------------------------|--------------|
@@ -181,6 +182,7 @@ As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.
 | 4 | Data inválida | Pagamento lançado à mão na conciliação com a data digitada errada, anterior ao próprio pedido | [Relatório](investigacoes/04-data-invalida/README.md) |
 | 5 | Pagamento em duplicidade | O gateway reenviou a confirmação do pagamento (webhook) e a aplicação registrou as duas, sem chave de idempotência | [Relatório](investigacoes/05-pagamento-duplicado/README.md) |
 | 6 | Valores de mentira em campos obrigatórios | No cadastro por televendas, e-mail e CPF são obrigatórios, e o atendente digitou valores de preenchimento quando o cliente não informou | [Relatório](investigacoes/06-dados-de-mentira/README.md) |
+| 7 | Texto com codificação quebrada | A sincronização do catálogo com o ERP leu um arquivo UTF-8 como Windows-1252 | [Relatório](investigacoes/07-codificacao-quebrada/README.md) |
 
 ### Principais achados
 
@@ -192,6 +194,7 @@ As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.
 | 4 | Um pagamento datado 48h antes do próprio pedido, com o mesmo horário dele, o que distorce o indicador de tempo até aprovação | Lançamento manual com a data digitada errada, sem validação de data nem registro da origem |
 | 5 | O pedido 2 tem dois pagamentos aprovados idênticos, com 4 segundos de diferença: o sistema registra R$ 199,80 recebidos para uma única transação de R$ 99,90 no gateway | A tabela `pagamentos` não guarda o id da transação do gateway, então um webhook reenviado vira um pagamento novo |
 | 6 | Três cadastros barrados na análise de crédito: dois com o e-mail `naotem@naotem.com` e CPFs de mentira (que **passam** no dígito verificador) e um com dois dígitos do CPF trocados | `NOT NULL` só garante que o campo não está vazio: nada valida o conteúdo, e o formulário não oferece "não informado" |
+| 7 | Produtos com nomes como "MÃ³dulo de RelatÃ³rios" em e-mails de 5 pedidos, enquanto o "Plano Básico Mensal" continua certo: o defeito está no dado, não na exibição | A sincronização com o ERP lê o arquivo UTF-8 como Windows-1252, e a operação inversa devolve o texto original exatamente, o que prova o diagnóstico |
 
 Cada relatório termina com uma correção proposta, testada numa cópia descartável do banco, mas **não executada**: como numa investigação real, o QA entrega evidência e recomendação, e a decisão de mexer nos dados é do time responsável.
 
@@ -209,7 +212,7 @@ Basta trocar a pasta para rodar as outras investigações.
 
 Cada defeito está implementado e comentado em `sql/03_seed_quebrado.sql`. Cada investigação fica em `investigacoes/`, com um relatório completo e a query de detecção (`deteccao.sql`), que a CI executa contra as duas massas de dados. Assim, o que está documentado é exatamente o que é testado.
 
-Além dos 6 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
+Além dos 7 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
 
 ### Quando a massa de dados muda
 

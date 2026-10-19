@@ -72,6 +72,13 @@ const CHECKS = [
     esperadoQuebrado: 3,
   },
   {
+    // 5 na massa quebrada: o nome de 3 produtos e a categoria de outros 2.
+    label: 'textos com codificação quebrada (mojibake)',
+    sql: readDeteccao('07-codificacao-quebrada'),
+    esperadoValido: 0,
+    esperadoQuebrado: 5,
+  },
+  {
     // 1 na massa quebrada: o pedido 10 tem valor_total e nenhum item.
     label: 'pedidos com total diferente da soma dos itens',
     sql: readValidacao('total-pedido-igual-soma-itens.sql'),

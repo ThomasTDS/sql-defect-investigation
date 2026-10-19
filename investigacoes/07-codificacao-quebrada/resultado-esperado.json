@@ -1,0 +1,53 @@
+[
+  {
+    "consulta": 1,
+    "colunas": ["id","nome","categoria"],
+    "linhas": [
+      ["1","Plano Básico Mensal","Assinatura"],
+      ["2","Plano Profissional Mensal","Assinatura"],
+      ["3","Plano Enterprise Mensal","Assinatura"],
+      ["4","Pacote de Onboarding","ServiÃ§o"],
+      ["5","Consultoria Avulsa (hora)","ServiÃ§o"],
+      ["6","MÃ³dulo de RelatÃ³rios","Add-on"],
+      ["7","MÃ³dulo de IntegraÃ§Ãµes","Add-on"],
+      ["8","Suporte PrioritÃ¡rio","Add-on"]
+    ]
+  },
+  {
+    "consulta": 2,
+    "colunas": ["id","nome","caracteres","bytes_utf8","bytes_hex"],
+    "linhas": [
+      ["1","Plano Básico Mensal","19","20","506c616e6f2042c3a17369636f204d656e73616c"],
+      ["6","MÃ³dulo de RelatÃ³rios","22","26","4dc383c2b364756c6f2064652052656c6174c383c2b372696f73"]
+    ]
+  },
+  {
+    "consulta": 3,
+    "colunas": ["id","gravado","relido_como_utf8"],
+    "linhas": [
+      ["6","MÃ³dulo de RelatÃ³rios","Módulo de Relatórios"],
+      ["7","MÃ³dulo de IntegraÃ§Ãµes","Módulo de Integrações"],
+      ["8","Suporte PrioritÃ¡rio","Suporte Prioritário"]
+    ]
+  },
+  {
+    "consulta": 4,
+    "colunas": ["tabela","registro_id","coluna","valor"],
+    "linhas": [
+      ["produtos","4","categoria","ServiÃ§o"],
+      ["produtos","5","categoria","ServiÃ§o"],
+      ["produtos","6","nome","MÃ³dulo de RelatÃ³rios"],
+      ["produtos","7","nome","MÃ³dulo de IntegraÃ§Ãµes"],
+      ["produtos","8","nome","Suporte PrioritÃ¡rio"]
+    ]
+  },
+  {
+    "consulta": 5,
+    "colunas": ["produto_id","produto","qtd_itens","pedidos"],
+    "linhas": [
+      ["6","MÃ³dulo de RelatÃ³rios","3","1, 7, 12"],
+      ["7","MÃ³dulo de IntegraÃ§Ãµes","1","6"],
+      ["8","Suporte PrioritÃ¡rio","1","11"]
+    ]
+  }
+]
