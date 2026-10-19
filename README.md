@@ -8,7 +8,7 @@
 
 ## Descrição
 
-Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de dados reais — clientes duplicados, foreign keys órfãs, status inconsistentes, datas inválidas, pagamentos em duplicidade, valores de mentira em campos obrigatórios, texto com codificação quebrada e duplicidade aproximada no catálogo — e documenta as investigações SQL que encontram cada um deles, com a mesma metodologia usada em investigação de bugs de produção: sintoma → hipóteses → queries e evidências → causa raiz → impacto → correção proposta.
+Este repositório simula um banco de dados de CRM/ERP de vendas com defeitos de dados reais — clientes duplicados, foreign keys órfãs, status inconsistentes, datas inválidas, pagamentos em duplicidade, valores de mentira em campos obrigatórios, texto com codificação quebrada, duplicidade aproximada no catálogo e fuso horário misturado nas datas — e documenta as investigações SQL que encontram cada um deles, com a mesma metodologia usada em investigação de bugs de produção: sintoma → hipóteses → queries e evidências → causa raiz → impacto → correção proposta.
 
 Não é um exercício de sintaxe SQL: o objetivo é demonstrar a habilidade de usar SQL para **encontrar defeito real** num banco com dados já corrompidos, do jeito que aconteceria investigando um bug relatado em produção.
 
@@ -58,7 +58,7 @@ erDiagram
         int id PK
         int cliente_id FK "NOT VALID na massa quebrada (inv. 02)"
         int vendedor_id FK "opcional"
-        timestamp data_pedido
+        timestamp data_pedido "sem fuso (inv. 09)"
         varchar status "sem CHECK (inv. 03)"
         numeric valor_total "= soma dos itens (validacoes/)"
     }
@@ -75,12 +75,12 @@ erDiagram
         int id PK "único identificador: sem id da transação do gateway (inv. 05)"
         int pedido_id FK
         numeric valor
-        timestamp data_pagamento "opcional, sem validação (inv. 04)"
+        timestamp data_pagamento "opcional, sem validação (inv. 04), sem fuso (inv. 09)"
         varchar status "sem CHECK (inv. 03)"
     }
 ```
 
-As anotações **inv. 01** a **inv. 08** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-8-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
+As anotações **inv. 01** a **inv. 09** marcam a característica do schema que é a causa raiz de cada [defeito investigado](#os-9-defeitos-investigados). Por exemplo, a falta de `UNIQUE` em `email` e `documento` é o que permite os clientes duplicados da investigação 01.
 
 ---
 
@@ -102,7 +102,8 @@ sql-defect-investigation/
 │   ├── 05-pagamento-duplicado/    # mesma estrutura
 │   ├── 06-dados-de-mentira/       # mesma estrutura
 │   ├── 07-codificacao-quebrada/   # mesma estrutura
-│   └── 08-duplicidade-aproximada/ # mesma estrutura
+│   ├── 08-duplicidade-aproximada/ # mesma estrutura
+│   └── 09-fuso-horario/           # mesma estrutura
 ├── validacoes/                # regras de consistência de valores (total, pagamento, catálogo)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tabelas, FKs, constraints
@@ -173,7 +174,7 @@ As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.
 
 ---
 
-## Os 8 defeitos investigados
+## Os 9 defeitos investigados
 
 | # | Defeito | Cenário real simulado | Investigação |
 |---|---------|------------------------|--------------|
@@ -185,6 +186,7 @@ As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.
 | 6 | Valores de mentira em campos obrigatórios | No cadastro por televendas, e-mail e CPF são obrigatórios, e o atendente digitou valores de preenchimento quando o cliente não informou | [Relatório](investigacoes/06-dados-de-mentira/README.md) |
 | 7 | Texto com codificação quebrada | A sincronização do catálogo com o ERP leu um arquivo UTF-8 como Windows-1252 | [Relatório](investigacoes/07-codificacao-quebrada/README.md) |
 | 8 | Duplicidade aproximada no catálogo | A busca da tela de venda é exata, não achou o produto, e o vendedor cadastrou outro com o nome digitado errado | [Relatório](investigacoes/08-duplicidade-aproximada/README.md) |
+| 9 | Fuso horário misturado nas datas | O app grava a data do pedido em UTC, enquanto o site e o gateway gravam no horário de Brasília, numa coluna que não guarda o fuso | [Relatório](investigacoes/09-fuso-horario/README.md) |
 
 ### Principais achados
 
@@ -198,6 +200,7 @@ As dependências são mantidas pelo **Dependabot** ([`.github/dependabot.yml`](.
 | 6 | Três cadastros barrados na análise de crédito: dois com o e-mail `naotem@naotem.com` e CPFs de mentira (que **passam** no dígito verificador) e um com dois dígitos do CPF trocados | `NOT NULL` só garante que o campo não está vazio: nada valida o conteúdo, e o formulário não oferece "não informado" |
 | 7 | Produtos com nomes como "MÃ³dulo de RelatÃ³rios" em e-mails de 5 pedidos, enquanto o "Plano Básico Mensal" continua certo: o defeito está no dado, não na exibição | A sincronização com o ERP lê o arquivo UTF-8 como Windows-1252, e a operação inversa devolve o texto original exatamente, o que prova o diagnóstico |
 | 8 | "Consultoria Avulsa (hora)" e "Consutoria avulsa - hora" são o mesmo serviço, com as vendas divididas entre os dois. Nenhuma comparação exata os liga, mas a similaridade de texto (`pg_trgm`) dá 0.808, e o limite padrão da extensão (0.3) marcaria planos legítimos como duplicados | `produtos.nome` não tem nenhuma restrição de unicidade, e a busca exata da tela de venda empurra o vendedor a cadastrar de novo |
+| 9 | Dois pedidos feitos pelo app às 22:30 e 23:10 de 31/01 aparecem em fevereiro, com o pagamento 2h55 "antes" do pedido. Descontadas as 3 horas do fuso, o pagamento volta ao padrão normal (5 minutos depois). Janeiro fica R$ 149,80 abaixo do real | As colunas de data são `timestamp without time zone` e não guardam o fuso, então UTC e horário de Brasília se misturam sem o banco perceber |
 
 Cada relatório termina com uma correção proposta, testada numa cópia descartável do banco, mas **não executada**: como numa investigação real, o QA entrega evidência e recomendação, e a decisão de mexer nos dados é do time responsável.
 
@@ -215,7 +218,7 @@ Basta trocar a pasta para rodar as outras investigações.
 
 Cada defeito está implementado e comentado em `sql/03_seed_quebrado.sql`. Cada investigação fica em `investigacoes/`, com um relatório completo e a query de detecção (`deteccao.sql`), que a CI executa contra as duas massas de dados. Assim, o que está documentado é exatamente o que é testado.
 
-Além dos 8 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
+Além dos 9 defeitos, a validação confere regras de consistência de valores (total do pedido = soma dos itens, pagamentos aprovados = total do pedido, e o preço do item igual ao do catálogo na massa de controle). As regras e o motivo de cada uma estão em [`validacoes/`](validacoes/README.md).
 
 ### Quando a massa de dados muda
 

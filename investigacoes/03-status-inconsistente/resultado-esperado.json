@@ -13,9 +13,9 @@
     "linhas": [
       ["cancelado","aprovado","1","12"],
       ["cancelado","estornado","1","4"],
-      ["confirmado","aprovado","3","3, 7, 13"],
+      ["confirmado","aprovado","4","3, 7, 13, 15"],
       ["confirmado","sem pagamento","1","10"],
-      ["entregue","aprovado","4","1, 2, 5, 8"],
+      ["entregue","aprovado","5","1, 2, 5, 8, 14"],
       ["entregue","pendente","1","11"],
       ["pendente","sem pagamento","2","6, 9"]
     ]
