@@ -48,8 +48,9 @@ SELECT id, nome, categoria FROM produtos ORDER BY id;
 | 6 | **MÃ³dulo de RelatÃ³rios** | Add-on |
 | 7 | **MÃ³dulo de IntegraÃ§Ãµes** | Add-on |
 | 8 | **Suporte PrioritÃ¡rio** | Add-on |
+| 9 | Consutoria avulsa - hora | Serviço |
 
-**Achado:** **H1 descartada.** O nome já está gravado errado no banco, e o e-mail só mostra o que recebeu. O detalhe mais importante é o produto `1`: **"Plano Básico Mensal" está correto**, com o "á" no lugar. Uma parte dos acentos está certa e outra está quebrada.
+**Achado:** **H1 descartada.** O nome já está gravado errado no banco, e o e-mail só mostra o que recebeu. O detalhe mais importante é o produto `1`: **"Plano Básico Mensal" está correto**, com o "á" no lugar. Uma parte dos acentos está certa e outra está quebrada. O produto `9` também está correto, porque foi cadastrado à mão, fora da sincronização. Ele é um cadastro duplicado do produto `5`, assunto da [investigação 08](../08-duplicidade-aproximada/README.md).
 
 ### Passo 2: os bytes de um nome certo e de um quebrado
 
@@ -134,7 +135,7 @@ GROUP BY pr.id, pr.nome;
 
 - **Cliente:** nomes de produto quebrados em e-mails e documentos de 5 pedidos, o que passa uma imagem de sistema malfeito.
 - **Busca:** quem procurar "Módulo" no catálogo não encontra os produtos `6` e `7`.
-- **Relatórios:** a categoria "ServiÃ§o" é, para o banco, um texto **diferente** de "Serviço". Hoje os dois produtos da categoria estão quebrados, então ela só aparece com o nome errado. Mas basta a próxima sincronização regravar só um deles, ou um produto novo entrar certo, para a categoria se dividir em duas linhas em qualquer relatório agrupado por categoria.
+- **Relatórios:** a categoria "ServiÃ§o" é, para o banco, um texto **diferente** de "Serviço". Os dois produtos que vieram da sincronização estão em "ServiÃ§o", e o produto `9`, cadastrado à mão, está em "Serviço" correto. **A categoria já está dividida em duas**: qualquer relatório agrupado por categoria mostra "Serviço" e "ServiÃ§o" como se fossem categorias diferentes.
 - **Reincidência:** como a causa está no importador, **a próxima sincronização quebra de novo** qualquer produto acentuado que for alterado no ERP.
 
 ## 6. Correção proposta

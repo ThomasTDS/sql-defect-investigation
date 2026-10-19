@@ -1,4 +1,4 @@
--- Introduz, de propósito, os 7 tipos de defeito investigados neste projeto.
+-- Introduz, de propósito, os 8 tipos de defeito investigados neste projeto.
 -- Cada bloco está comentado com o cenário real que ele simula. Execute
 -- depois de 01_schema.sql + 02_seed_valido.sql.
 
@@ -121,3 +121,17 @@ UPDATE produtos
 SET categoria = convert_from(convert_to(categoria, 'UTF8'), 'WIN1252')
 WHERE id IN (4, 5);
 -- Categoria "Serviço" do Pacote de Onboarding e da Consultoria Avulsa.
+
+-- =====================================================================
+-- DEFEITO 8: Duplicidade aproximada no catálogo
+-- Cenário real: um vendedor precisava lançar uma consultoria e não achou
+-- o produto na busca (que é por texto exato). Cadastrou um novo, com o
+-- nome digitado à mão e com erro de digitação, e lançou a venda nele.
+-- Nada impede: produtos.nome não tem nenhuma restrição de unicidade.
+-- =====================================================================
+INSERT INTO produtos (nome, preco, categoria)
+VALUES ('Consutoria avulsa - hora', 150.00, 'Serviço');
+-- Mesmo serviço do produto 5 ("Consultoria Avulsa (hora)"), mesmo preço.
+
+UPDATE itens_pedido SET produto_id = currval('produtos_id_seq') WHERE pedido_id = 13;
+-- A consultoria do pedido 13 foi lançada no produto duplicado.
