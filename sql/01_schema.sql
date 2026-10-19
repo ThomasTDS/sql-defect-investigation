@@ -2,7 +2,7 @@
 -- pedidos e pagamentos. Modelo propositalmente simples, mas realista o
 -- bastante pra sustentar os tipos de defeito investigados neste projeto
 -- (duplicidade, FK órfã, status inconsistente, data inválida, pagamento em
--- duplicidade).
+-- duplicidade, valores de mentira em campos obrigatórios).
 
 CREATE TABLE clientes (
     id SERIAL PRIMARY KEY,
@@ -13,6 +13,8 @@ CREATE TABLE clientes (
     data_cadastro TIMESTAMP NOT NULL DEFAULT now(),
     status VARCHAR(20) NOT NULL DEFAULT 'ativo'
 );
+-- email e documento são só NOT NULL, sem nenhuma validação de conteúdo: é o
+-- que permite os valores de mentira da investigação 06.
 -- Sem UNIQUE em email/documento de propósito: é exatamente a ausência dessa
 -- constraint que permite o defeito de clientes duplicados investigado aqui.
 

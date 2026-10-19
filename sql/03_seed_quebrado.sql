@@ -1,4 +1,4 @@
--- Introduz, de propósito, os 5 tipos de defeito investigados neste projeto.
+-- Introduz, de propósito, os 6 tipos de defeito investigados neste projeto.
 -- Cada bloco está comentado com o cenário real que ele simula. Execute
 -- depois de 01_schema.sql + 02_seed_valido.sql.
 
@@ -9,7 +9,7 @@
 -- constraint única em email/documento pra impedir o segundo registro.
 -- =====================================================================
 INSERT INTO clientes (nome, email, documento, telefone, data_cadastro, status) VALUES
-    ('Ana C. Ferreira', 'ana.ferreira@example.com', '11122233344', '11988887777', '2026-01-10 09:17:32', 'ativo');
+    ('Ana C. Ferreira', 'ana.ferreira@example.com', '11122233396', '11988887777', '2026-01-10 09:17:32', 'ativo');
 -- Mesmo e-mail e documento do cliente id=1, cadastrado 2 minutos depois,
 -- com o nome digitado de forma levemente diferente.
 
@@ -22,7 +22,7 @@ INSERT INTO clientes (nome, email, documento, telefone, data_cadastro, status) V
 -- bancos que já têm alguns anos de operação.
 -- =====================================================================
 INSERT INTO clientes (nome, email, documento, telefone, data_cadastro, status)
-VALUES ('Cliente Removido Depois', 'removido@example.com', '12312312312', '11900000000', '2025-11-01 10:00:00', 'ativo');
+VALUES ('Cliente Removido Depois', 'removido@example.com', '12312312387', '11900000000', '2025-11-01 10:00:00', 'ativo');
 
 INSERT INTO pedidos (cliente_id, vendedor_id, data_pedido, status, valor_total)
 VALUES (currval('clientes_id_seq'), 1, '2025-12-01 10:00:00', 'confirmado', 99.90);
@@ -85,3 +85,19 @@ INSERT INTO pagamentos (pedido_id, valor, data_pagamento, status)
 VALUES (2, 99.90, '2026-01-13 15:10:04', 'aprovado');
 -- Mesmo pedido, mesmo valor e 4 segundos depois do pagamento original
 -- (id 2, 15:10:00).
+
+-- =====================================================================
+-- DEFEITO 6: Valores de mentira em campos obrigatórios
+-- Cenário real: no cadastro por televendas, o formulário exige e-mail e
+-- CPF. Quando o cliente não informa (ou o atendente não pergunta), o
+-- atendente digita um valor qualquer só para conseguir salvar. O banco
+-- aceita, porque NOT NULL só impede o campo vazio, não o valor falso.
+-- =====================================================================
+INSERT INTO clientes (nome, email, documento, telefone, data_cadastro, status) VALUES
+    ('Roberto Lima Santos', 'naotem@naotem.com',      '00000000000', '11987654321', '2026-02-12 10:30:00', 'ativo'),
+    ('Sandra Melo Prado',   'naotem@naotem.com',      '12345678909', '21976543210', '2026-02-12 14:05:00', 'ativo'),
+    ('Paulo Henrique Dias', 'paulo.dias@example.com', '14725836928', '31965432109', '2026-02-13 09:40:00', 'ativo');
+-- Roberto e Sandra são pessoas diferentes com o mesmo e-mail de mentira, e
+-- os dois CPFs passam no cálculo do dígito verificador. O CPF do Paulo é
+-- real, mas foi digitado com os dois últimos números trocados (o certo
+-- seria 14725836982), e o dígito verificador não fecha.

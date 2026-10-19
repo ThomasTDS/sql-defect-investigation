@@ -8,7 +8,7 @@
 
 ## Description
 
-This repository simulates a sales CRM/ERP database with real-world data defects (duplicate customers, orphaned foreign keys, inconsistent statuses, invalid dates and duplicate payments) and documents the SQL investigations that find each one of them. It uses the same method applied when investigating production bugs: symptom → hypotheses → queries and evidence → root cause → impact → proposed fix.
+This repository simulates a sales CRM/ERP database with real-world data defects (duplicate customers, orphaned foreign keys, inconsistent statuses, invalid dates, duplicate payments and fake values in required fields) and documents the SQL investigations that find each one of them. It uses the same method applied when investigating production bugs: symptom → hypotheses → queries and evidence → root cause → impact → proposed fix.
 
 This is not a SQL syntax exercise. The goal is to show how to use SQL to **find real defects** in a database whose data is already corrupted, the way it would happen while investigating a bug reported in production.
 
@@ -37,8 +37,8 @@ erDiagram
     clientes {
         int id PK
         varchar nome
-        varchar email "no UNIQUE (inv. 01)"
-        varchar documento "no UNIQUE (inv. 01)"
+        varchar email "no UNIQUE (inv. 01), not validated (inv. 06)"
+        varchar documento "no UNIQUE (inv. 01), not validated (inv. 06)"
         varchar telefone "optional"
         timestamp data_cadastro
         varchar status "ativo | inativo"
@@ -84,7 +84,7 @@ erDiagram
     }
 ```
 
-The **inv. 01** to **inv. 05** notes mark the schema characteristic that is the root cause of each [investigated defect](#the-5-investigated-defects). For example, the missing `UNIQUE` on `email` and `documento` is what allows the duplicate customers of investigation 01.
+The **inv. 01** to **inv. 06** notes mark the schema characteristic that is the root cause of each [investigated defect](#the-6-investigated-defects). For example, the missing `UNIQUE` on `email` and `documento` is what allows the duplicate customers of investigation 01.
 
 ---
 
@@ -103,7 +103,8 @@ sql-defect-investigation/
 │   ├── 02-fk-orfa/            # same structure
 │   ├── 03-status-inconsistente/   # same structure
 │   ├── 04-data-invalida/          # same structure
-│   └── 05-pagamento-duplicado/    # same structure
+│   ├── 05-pagamento-duplicado/    # same structure
+│   └── 06-dados-de-mentira/       # same structure
 ├── validacoes/                # value consistency rules (total, payment, catalog)
 ├── sql/
 │   ├── 01_schema.sql          # DDL: tables, FKs, constraints
@@ -174,7 +175,7 @@ Dependencies are kept up to date by **Dependabot** ([`.github/dependabot.yml`](.
 
 ---
 
-## The 5 investigated defects
+## The 6 investigated defects
 
 | # | Defect | Simulated real-world scenario | Investigation |
 |---|--------|-------------------------------|---------------|
@@ -183,6 +184,7 @@ Dependencies are kept up to date by **Dependabot** ([`.github/dependabot.yml`](.
 | 3 | Inconsistent status | Order marked "delivered" without an approved payment; order "cancelled" with the payment still "approved" | [Report](investigacoes/03-status-inconsistente/README.md) |
 | 4 | Invalid date | Payment entered by hand during reconciliation with a mistyped date, earlier than the order itself | [Report](investigacoes/04-data-invalida/README.md) |
 | 5 | Duplicate payment | The gateway resent the payment confirmation (webhook) and the application recorded both, with no idempotency key | [Report](investigacoes/05-pagamento-duplicado/README.md) |
+| 6 | Fake values in required fields | In phone sales sign-ups, email and CPF (Brazilian taxpayer ID) are required, and the agent typed filler values when the customer did not provide them | [Report](investigacoes/06-dados-de-mentira/README.md) |
 
 The reports are in Portuguese.
 
@@ -195,6 +197,7 @@ The reports are in Portuguese.
 | 3 | A cancelled order with its payment still approved (no refund), a delivered order with no confirmed payment, and order 10 confirmed with no payment | Order status and payment status change independently, and the database enforces no rule on them |
 | 4 | A payment dated 48h before its own order, at the exact same time of day, which skews the time-to-approval metric | Manual entry with a mistyped date, with no date validation and no record of where the entry came from |
 | 5 | Order 2 has two identical approved payments, 4 seconds apart: the system records R$ 199.80 received for a single R$ 99.90 transaction at the gateway | The `pagamentos` table does not store the gateway transaction id, so a resent webhook becomes a new payment |
+| 6 | Three sign-ups rejected by the credit check: two with the email `naotem@naotem.com` ("don't have one") and fake CPFs (which **pass** the check-digit test), and one with two CPF digits swapped | `NOT NULL` only ensures the field is not empty: nothing validates its content, and the form offers no "not provided" option |
 
 Each report ends with a proposed fix, tested on a disposable copy of the database but **not applied**: as in a real investigation, QA delivers evidence and a recommendation, and the decision to change the data belongs to the responsible team.
 
@@ -212,7 +215,7 @@ Change the folder to run the other investigations.
 
 Each defect is implemented and commented in `sql/03_seed_quebrado.sql`. Each investigation lives in `investigacoes/`, with a full report and the detection query (`deteccao.sql`), which the CI runs against both datasets. That way, what is documented is exactly what is tested.
 
-Besides the 5 defects, the validation also checks value consistency rules (order total = sum of its items, approved payments = order total, and item price equal to the catalog price in the control dataset). The rules, and the reason for each one, are in [`validacoes/`](validacoes/README.md) (in Portuguese).
+Besides the 6 defects, the validation also checks value consistency rules (order total = sum of its items, approved payments = order total, and item price equal to the catalog price in the control dataset). The rules, and the reason for each one, are in [`validacoes/`](validacoes/README.md) (in Portuguese).
 
 ### When the data changes
 

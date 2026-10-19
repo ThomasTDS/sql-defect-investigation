@@ -4,16 +4,16 @@
 -- retornar zero resultados rodada só contra este arquivo.
 
 INSERT INTO clientes (nome, email, documento, telefone, data_cadastro, status) VALUES
-    ('Ana Carolina Ferreira', 'ana.ferreira@example.com', '11122233344', '11988887777', '2026-01-10 09:15:00', 'ativo'),
-    ('Bruno Costa Lima',      'bruno.lima@example.com',   '22233344455', '11977776666', '2026-01-12 14:30:00', 'ativo'),
-    ('Carla Mendes Souza',    'carla.souza@example.com',  '33344455566', '21966665555', '2026-01-15 11:00:00', 'ativo'),
-    ('Diego Alves Pereira',   'diego.pereira@example.com','44455566677', '21955554444', '2026-01-18 16:45:00', 'ativo'),
-    ('Elisa Martins Rocha',   'elisa.rocha@example.com',  '55566677788', '31944443333', '2026-01-20 10:20:00', 'ativo'),
-    ('Fábio Nunes Castro',    'fabio.castro@example.com', '66677788899', '31933332222', '2026-01-22 13:10:00', 'inativo'),
-    ('Gabriela Dias Ramos',   'gabriela.ramos@example.com','77788899900','41922221111', '2026-01-25 09:50:00', 'ativo'),
-    ('Henrique Lopes Teixeira','henrique.teixeira@example.com','88899900011','41911110000','2026-01-28 15:00:00', 'ativo'),
-    ('Isabela Rocha Barbosa', 'isabela.barbosa@example.com','99900011122','51900001111', '2026-02-02 12:30:00', 'ativo'),
-    ('João Pedro Azevedo',    'joao.azevedo@example.com', '00011122233', '51999990000', '2026-02-05 08:40:00', 'ativo');
+    ('Ana Carolina Ferreira', 'ana.ferreira@example.com', '11122233396', '11988887777', '2026-01-10 09:15:00', 'ativo'),
+    ('Bruno Costa Lima',      'bruno.lima@example.com',   '22233344405', '11977776666', '2026-01-12 14:30:00', 'ativo'),
+    ('Carla Mendes Souza',    'carla.souza@example.com',  '33344455508', '21966665555', '2026-01-15 11:00:00', 'ativo'),
+    ('Diego Alves Pereira',   'diego.pereira@example.com','44455566619', '21955554444', '2026-01-18 16:45:00', 'ativo'),
+    ('Elisa Martins Rocha',   'elisa.rocha@example.com',  '55566677720', '31944443333', '2026-01-20 10:20:00', 'ativo'),
+    ('Fábio Nunes Castro',    'fabio.castro@example.com', '66677788830', '31933332222', '2026-01-22 13:10:00', 'inativo'),
+    ('Gabriela Dias Ramos',   'gabriela.ramos@example.com','77788899941','41922221111', '2026-01-25 09:50:00', 'ativo'),
+    ('Henrique Lopes Teixeira','henrique.teixeira@example.com','88899900078','41911110000','2026-01-28 15:00:00', 'ativo'),
+    ('Isabela Rocha Barbosa', 'isabela.barbosa@example.com','99900011112','51900001111', '2026-02-02 12:30:00', 'ativo'),
+    ('João Pedro Azevedo',    'joao.azevedo@example.com', '00011122285', '51999990000', '2026-02-05 08:40:00', 'ativo');
 
 INSERT INTO vendedores (nome, email, equipe) VALUES
     ('Mariana Oliveira', 'mariana.oliveira@empresa.com', 'Equipe A'),

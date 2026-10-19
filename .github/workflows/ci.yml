@@ -41,8 +41,8 @@ jobs:
         run: docker compose up -d --wait
 
       # Confere que as três camadas (schema, massa válida e massa quebrada)
-      # foram carregadas: 10 clientes da massa válida + 1 duplicado = 11, e
-      # o pedido órfão da massa quebrada está lá.
+      # foram carregadas: 10 clientes da massa válida + 1 duplicado + 3 da
+      # investigação 06 = 14, e o pedido órfão da massa quebrada está lá.
       - name: Conferir dados carregados
         run: |
           query() {
@@ -50,7 +50,7 @@ jobs:
           }
           clientes=$(query "SELECT COUNT(*) FROM clientes")
           orfaos=$(query "SELECT COUNT(*) FROM pedidos p LEFT JOIN clientes c ON c.id = p.cliente_id WHERE c.id IS NULL")
-          echo "clientes: $clientes (esperado 11)"
+          echo "clientes: $clientes (esperado 14)"
           echo "pedidos órfãos: $orfaos (esperado 1)"
 
           marca() { [ "$1" = "$2" ] && echo "✅" || echo "❌"; }
@@ -59,14 +59,14 @@ jobs:
             echo ""
             echo "| Conferência | Esperado | Encontrado | |"
             echo "|---|---|---|---|"
-            echo "| clientes carregados | 11 | $clientes | $(marca "$clientes" 11) |"
+            echo "| clientes carregados | 14 | $clientes | $(marca "$clientes" 14) |"
             echo "| pedidos órfãos (massa quebrada) | 1 | $orfaos | $(marca "$orfaos" 1) |"
             echo ""
           } >> "$GITHUB_STEP_SUMMARY"
 
           # Tem que ser a última linha: com bash -e, uma lista com && que
           # falha só derruba o passo quando é o último comando.
-          [ "$clientes" = "11" ] && [ "$orfaos" = "1" ]
+          [ "$clientes" = "14" ] && [ "$orfaos" = "1" ]
 
       # Roda cada exploracao.sql do jeito que o "Como reproduzir" dos
       # relatórios ensina. Com ON_ERROR_STOP, o psql sai com erro na
