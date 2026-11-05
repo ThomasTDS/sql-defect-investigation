@@ -1,6 +1,6 @@
 # 🔎 SQL Defect Investigation
 
-[Português](README.md) · **English**
+[Português](README.md) · **English** · [Español](README.es.md)
 
 ![CI](https://github.com/ThomasTDS/sql-defect-investigation/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -121,7 +121,8 @@ sql-defect-investigation/
 ├── package.json
 ├── LICENSE
 ├── README.md                  # Portuguese
-└── README.en.md               # English
+├── README.en.md               # English
+└── README.es.md               # Spanish
 ```
 
 ---
